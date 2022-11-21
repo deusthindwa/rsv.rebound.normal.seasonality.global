@@ -2,10 +2,10 @@
 #18/11/2022
 #global reemergence of RSV onset, duration and peak
 
-#d1 <- runIfExpired('who_rsv', ~jsonlite::read_json("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT", simplifyVector = T))
+#d1 <-  ~jsonlite::read_json("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT", simplifyVector = T))
 
 #read the WHO RSV update file into R
-rsv <- read.csv(curl("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT?$format=csv"))
+rsv <- runIfExpired('who_rsv', maxage = 168, ~read.csv(curl("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT?$format=csv")))
 
 #data munging to get the required variables
 rsvds <-
