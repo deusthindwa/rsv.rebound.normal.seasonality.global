@@ -1,4 +1,4 @@
-#written by Deus
+#By Deus Thindwa
 #18/11/2022
 #global reemergence of RSV onset, duration and peak
 
@@ -24,4 +24,14 @@ source(here("script", "4_runIfExpired.R"))
 
 #load RSV dataset from Jason format
 source(here("script", "5_loadRSVdata.R"))
+
+#data manipulation to get needed settings
+source(here("script", "6_manipRSVdata.R"))
+
+
+
+
+
+
+
 

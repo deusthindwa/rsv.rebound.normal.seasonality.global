@@ -7,15 +7,22 @@
 #read the WHO RSV update file into R
 rsv <- runIfExpired('who_rsv', maxage = 168, ~read.csv(curl("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT?$format=csv")))
 
-#data munging to get the required variables
+#get the required variables
 rsvds <-
   rsv %>%
   dplyr::filter(!is.na(RSV)) %>%
   dplyr::select(WHOREGION, FLUSEASON, HEMISPHERE, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE, MMWR_YEAR, MMWR_WEEK, RSV) %>%
-  arrange(WHOREGION, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE)
+  dplyr::arrange(WHOREGION, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE) %>%
+  dplyr::rename("region" = WHOREGION,
+                "fluseas" = FLUSEASON,
+                "hemi" = HEMISPHERE,
+                "country" = COUNTRY_AREA_TERRITORY,
+                "date"= MMWR_WEEKSTARTDATE,
+                "yr" = MMWR_YEAR,
+                "wk" = MMWR_WEEK,
+                "cases" = RSV)
 
-  
-rsvds %>%
-  write_csv(x = rsvds, file = here("data", "RSVglobal.csv"))
+#save the dataset as CSV
+rsvds %>% write_csv(here("data", "RSVglobal.csv"))
   
   
