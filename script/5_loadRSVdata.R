@@ -11,7 +11,7 @@ rsv <- runIfExpired('who_rsv', maxage = 168, ~read.csv(curl("https://frontdoor-l
 rsvds <-
   rsv %>%
   dplyr::filter(!is.na(RSV)) %>%
-  dplyr::select(WHOREGION, FLUSEASON, HEMISPHERE, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE, MMWR_YEAR, MMWR_WEEK, RSV) %>%
+  dplyr::select(WHOREGION, FLUSEASON, HEMISPHERE, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE, MMWR_YEAR, MMWR_WEEK, ORIGIN_SOURCE, RSV) %>%
   dplyr::arrange(WHOREGION, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE) %>%
   dplyr::rename("region" = WHOREGION,
                 "fluseas" = FLUSEASON,
@@ -20,6 +20,7 @@ rsvds <-
                 "date"= MMWR_WEEKSTARTDATE,
                 "yr" = MMWR_YEAR,
                 "wk" = MMWR_WEEK,
+                "sentin" = ORIGIN_SOURCE,
                 "cases" = RSV)
 
 #save the dataset as CSV
