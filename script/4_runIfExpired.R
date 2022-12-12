@@ -14,7 +14,7 @@
 
 #source('./R/fileCache.R')
 runIfExpired <- function(storeName, f, maxage=hours(0)) {
-  basepath <- "Data/"
+  basepath <- here("data")
   mostRecent <- mostRecentTimestamp(storeName, basepath=basepath)
   f <- rlang::as_function(f)
   

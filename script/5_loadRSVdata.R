@@ -21,9 +21,13 @@ rsvds <-
                 "yr" = MMWR_YEAR,
                 "wk" = MMWR_WEEK,
                 "sentin" = ORIGIN_SOURCE,
-                "cases" = RSV)
+                "cases" = RSV) %>%
+  dplyr::mutate(date = date(date),
+                sentin = factor(sentin),
+                hemi = factor(hemi),
+                fluseas = factor(fluseas))
 
 #save the dataset as CSV
-rsvds %>% write_csv(here("data", "RSVglobal.csv"))
+#rsvds %>% write_csv(here("data", "RSVglobal.csv"))
   
   
