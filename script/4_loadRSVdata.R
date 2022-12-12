@@ -27,7 +27,6 @@ rsvds <-
                 hemi = factor(hemi),
                 fluseas = factor(fluseas))
 
-#save the dataset as CSV
-#rsvds %>% write_csv(here("data", "RSVglobal.csv"))
+rsvds_clean <- distinct(rsvds, country, date, .keep_all = TRUE)
   
   

@@ -13,23 +13,6 @@ pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "here", "rio",
 
 #====================================================================
 
-#run archiving file
-source(here("script", "2_fileCache.R"))
-
-#run archiving file
-#source(here("script", "3_gitSetup.R"))
-
-#run archiving file
-source(here("script", "4_runIfExpired.R"))
-
-#load RSV dataset from Jason format
-source(here("script", "5_loadRSVdata.R"))
-
-#data manipulation to get needed settings
-source(here("script", "6_manipRSVdata.R"))
-
-#data manipulation to get needed settings
-source(here("script", "7_seasMetrics.R"))
 
 
 
