@@ -28,7 +28,8 @@ source(here("script", "5_loadRSVdata.R"))
 #data manipulation to get needed settings
 source(here("script", "6_manipRSVdata.R"))
 
-
+#data manipulation to get needed settings
+source(here("script", "7_seasMetrics.R"))
 
 
 

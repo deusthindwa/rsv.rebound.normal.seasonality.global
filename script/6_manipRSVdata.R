@@ -1,19 +1,6 @@
 #26/11/2022
 
 #=========================================================
-#separate sentinel from not defined source/origin of cases 
-rsvds %>% 
-  dplyr::filter(country %in% c("Cameroon", "Central African Republic", "Côte d'Ivoire", "Madagascar",
-                               "Mozambique", "Uganda", "South Africa", 
-                               "India",
-                               "Australia", "Japan", "Mongolia", "Malaysia",
-                               "Oman", "Qatar")) %>%
-  group_by(sentin)
-  
-  
-  group_by(region, fluseas, hemi, country, date, yr, wk, sentin, cases) %>%
-  tally()
-  
 
 #plotting RSV cases in Africa/South East Asia/Middle East/Western pacific
 rsvds %>%

@@ -1,0 +1,293 @@
+---
+title: Understanding the patterns of global re-emergence of RSV following COVID19 pandemic
+author: "By Deus Thindwa"
+date: "01/12/2022"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+##### Load required packages for entire project
+```{r LoadPackages, results = 'hide', message = FALSE, warning = FALSE}
+
+pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "here", "rio", 
+                        "scales", "boot", "magrittr",  "mvtnorm", "zoo", 
+                        "patchwork", "PropCIs", "reshape2","purrr", "minqa", 
+                        "ggridges", "timetk", "ggbreak", "ggpubr", "gridExtra", 
+                        "curl", "archive", "jsonlite", "here"))
+                        
+``` 
+
+##### Run the file cache (in silence)
+```{r RunFileCache, results = "hide", echo = FALSE, message = FALSE, warning = FALSE}
+
+##FROM excessILI package, Marcus Russi
+now <- lubridate::now()
+
+retrievePath <- function(fname, basepath='.', goalDate=lubridate::now()) {
+  
+  # Construct the path to the folder where all copies of 'fname' should be 
+  # stored
+  fullpath <- file.path(basepath, fname)
+  
+  # Make sure that this path is a directory I.e., archive/fname.txt needs to 
+  # be a folder, not regular file.
+  if (!dir.exists(fullpath))
+    stop(sprintf("Path %s doesn't exist, or isn't a directory", fullpath))
+  
+  # Be sure that 'goalDate' is a Date object
+  assertthat::assert_that(any("POSIXct" %in% class(goalDate)))
+  
+  # Get all the files in this directory
+  dirListing <- list.files(fullpath)
+  
+  # If there were no files in the directory, we can't retrieve them!
+  if (length(dirListing) == 0)
+    stop(sprintf("No files were found in dirctory %s", fullpath))
+  
+  # Get a list of modification times for each file in the directory
+  fullPaths <- file.path(fullpath, dirListing)
+  mtimes <- purrr::lift_dl(file.mtime)(fullPaths)
+  
+  # The interval elapsed between the modified time of each file, and the 
+  # goalDate. Our goal is to get the file with the smallest delta.
+  absDeltas <-
+    purrr::map_dbl(mtimes, ~lubridate::int_length(. %--% goalDate)) %>%
+    abs
+  
+  # Find the index, and return it
+  idx <- which(absDeltas == min(absDeltas))[1]
+  
+  fullPaths[idx]
+}
+
+#' Retrieve an RDS modified nearest to a specific date
+#' 
+#' Retrieves an RDS file stored in \code{basepath/fname} that has
+#' the closest modification date to \code{goalDate}. If no such file exists, an
+#' error will be thrown.
+#'
+#' @inheritParams retrievePath
+#'
+#' @examples
+#' storeRDS(mtcars, 'mtcars')
+#' identical(mtcars, retrieveRDS('mtcars'))
+#'
+#' storeRDS(mtcars, 'mtcars', basepath='.')
+#' mtcars2 <- mtcars
+#' mtcars2[,'cyl'] <- 1
+#' storeRDS(mtcars2, 'mtcars')
+#' mtcars_retrieved <- retrieveRDS('mtcars', goalDate = lubridate::now())
+#' identical(mtcars, mtcars_retrieved)
+#'
+#' @export
+retrieveRDS <- function(fname, basepath='.', goalDate=Sys.time())
+  retrievePath(fname, basepath, goalDate) %>% readRDS
+
+#' Store an R object into the file cache
+#' 
+#' Given an R object, attempts to store it in the directory
+#' \code{basepath/fname}. The name given to the file will be of the form
+#' \code{DATE.rds}, where \code{DATE} is of the format
+#' \code{\%Y_\%m_\%d_\%H_\%M}.  An error will be thrown if \code{basepath} does
+#' not exist. However, if \code{basepath/fname} does not exist, an attempt will
+#' be made to create it. The \code{DATE} is the current time. Intended to be
+#' used with \code{\link{retrieveRDS}}. See \code{\link{mostRecentTimestamp}}
+#' for an usage example.
+#' 
+#' @param fname The name of the directory in \code{basepath} where various
+#'   revisions of the file are stored. I.e., \code{file.txt} should be a
+#'   directory, with revisions of the true \code{file.txt} stored inside of
+#'   it.
+#'
+#' @param obj An R object
+#'
+#' @param basepath A string. The path which stores \code{fname}. Default '.'
+#'
+#' @return A message announcing the path the object has been written to
+#' 
+#' @examples
+#' saveRDS(mtcars, 'cars')
+#' saveRDS(mtcars, 'cars')
+#' # Now the filesystem has, in '.':
+#' # ├── mtcars
+#' # │   ├── 2020_04_09_16_40.rds
+#' # │   ├── 2020_04_09_16_41.rds
+#'
+#' @export
+storeRDS <- function(obj, fname, basepath='.') {
+  
+  if (!dir.exists(basepath))
+    stop(sprintf("Basepath '%s' does not exist. Cannot write file.", basepath))
+  
+  fullPath <- file.path(basepath, fname)
+  
+  # Create the directory for 'fname' if it doesn't exist. Notify the user.
+  if (!dir.exists(fullPath)) {
+    message(sprintf("Creating directory %s", fullPath))
+    success <- dir.create(fullPath, recursive = FALSE, showWarnings = TRUE)
+    
+    if (any(!success))
+      stop(sprintf("Failed to create directory %s", fullPath))
+  }
+  
+  name <- as.character.POSIXt(Sys.time(), format="%Y_%m_%d_%H_%M.rds")
+  writepath <- file.path(basepath, fname, name)
+  
+  saveRDS(obj, writepath)
+  
+  message(sprintf("Wrote object to %s", writepath))
+}
+
+#' Identify the timestamp of the most recently modified file in the file cache
+#' 
+#' Returns the timestamp of the most recently modified file. If no such file
+#' exists, or if the directory \code{basepath/fname} doesn't exist, returns NA.
+#' 
+#' @param fname The name of the directory in \code{basepath} where various
+#'   revisions of the file are stored. I.e., \code{file.txt} should be a
+#'   directory, with revisions of the true \code{file.txt} stored inside of
+#'   it.
+#'
+#' @param basepath A string. The path which stores the \code{fname} directory.
+#'   Default '.'
+#'
+#' @return A POSIXct object specifying the \code{mtime} of the most recently
+#'   modified file in \code{basepath/fname}
+#'
+#' @examples
+#' library(lubridate)
+#'
+#' saveRDS(mtcars, 'cars')
+#' saveRDS(mtcars, 'cars')
+#' 
+#' # Some time elapses...
+#' 
+#' # Decide if the latest version of 'mtcars' is "too old"
+#' if (mostRecentTimestamp('mtcars') %--% now() > hours(24)) {
+#'   # Store a "new" version
+#'   saveRDS(mtcars, 'cars')
+#' } else {
+#'   cached_mtcars <- retrieveRDS('mtcars')
+#' }
+#'
+#' @export
+mostRecentTimestamp <- function(fname, basepath='.') {
+  
+  # Construct the path to the folder where all copies of 'fname' should be 
+  # stored
+  fullpath <- file.path(basepath, fname)
+  
+  # Make sure that this path is a directory I.e., archive/fname.txt needs to 
+  # be a folder, not regular file.
+  if (!dir.exists(fullpath))
+    return(NA)
+  
+  # Get all the files in this directory
+  dirListing <- list.files(fullpath)
+  
+  # If there were no files in the directory, we can't retrieve them!
+  if (length(dirListing) == 0)
+    return(NA)
+  
+  # Get a list of modification times for each file in the directory
+  fullPaths <- file.path(fullpath, dirListing)
+  mtimes <- purrr::lift_dl(file.mtime)(fullPaths)
+  
+  max(mtimes)
+}
+
+```
+
+##### Run If Expired
+```{r RunIfExpired, results = 'hide', message = FALSE, warning = FALSE}
+
+#From Dan Weinberger (archiving)
+
+# Using ExcessILI's data archiving functions, returns the most recent copy of
+# output obtained by running a function or formula \code{f}, unless this 
+# copy doesn't exist or is older (by modification time) than \code{maxage}.
+# In that case, \code{f} is run and the output is archived into the folder
+# Data/'storeName' as an RDS file, using the function ExcessILI::storeRDS.
+#
+# @param storeName A string. The name of the folder to store output in
+# @param f A function or formula taking no arguments. Formulas are coerced to
+#   functions.
+# @param maxage How old can any existing archived file be before \code{f} is 
+#   called again?
+
+#source('./R/fileCache.R')
+runIfExpired <- function(storeName, f, maxage=hours(0)) {
+  basepath <- here("data")
+  mostRecent <- mostRecentTimestamp(storeName, basepath=basepath)
+  f <- rlang::as_function(f)
+  
+  runAndArchive <- function() {
+    data <- f()
+    storeRDS(data, storeName, basepath)
+    data
+  }
+  
+  if (is.na(mostRecent)) 
+    return(runAndArchive())
+  if (mostRecent %--% now() < maxage)
+    return(retrieveRDS(storeName, basepath))
+  runAndArchive()
+}
+
+```
+
+##### Load RSV datasets
+```{r LoadRSVdata, results = "hide", message = FALSE, warning = FALSE}
+
+#read the WHO RSV update file into R
+rsv <- runIfExpired('who_rsv', maxage = 168, ~read.csv(curl("https://frontdoor-l4uikgap6gz3m.azurefd.net/FLUMART/VIW_FNT?$format=csv")))
+
+#get the required variables
+rsvds <-
+  rsv %>%
+  dplyr::filter(!is.na(RSV)) %>%
+  dplyr::select(WHOREGION, FLUSEASON, HEMISPHERE, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE, MMWR_YEAR, MMWR_WEEK, ORIGIN_SOURCE, RSV) %>%
+  dplyr::arrange(WHOREGION, COUNTRY_AREA_TERRITORY, MMWR_WEEKSTARTDATE) %>%
+  dplyr::rename("region" = WHOREGION,
+                "fluseas" = FLUSEASON,
+                "hemi" = HEMISPHERE,
+                "country" = COUNTRY_AREA_TERRITORY,
+                "date"= MMWR_WEEKSTARTDATE,
+                "yr" = MMWR_YEAR,
+                "wk" = MMWR_WEEK,
+                "sentin" = ORIGIN_SOURCE,
+                "cases" = RSV)
+
+#save the dataset as CSV
+#rsvds %>% write_csv(here("data", "RSVglobal.csv"))
+
+```
+
+##### Plotting RSV cases for Africa/South East Asia/Middle East/Western pacific
+
+```{r PlotRSV1, message = FALSE, warning = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+
+rsvds %>%
+  dplyr::filter(country %in% c("Cameroon", "Central African Republic", "Côte d'Ivoire", "Madagascar",
+                               "Mozambique", "Uganda", "South Africa", 
+                               "India",
+                               "Australia", "Japan", "Mongolia", "Malaysia",
+                               "Oman", "Qatar")) %>%
+  ggplot(aes(x = date(date), y = cases)) +
+  geom_line() + 
+  facet_wrap(. ~ country, scales = "free_y") +
+  theme_bw(base_size = 10, base_family = "Lato") +
+  labs(title = , x = "MMWR Date", y = "RSV cases")
+
+```
+
