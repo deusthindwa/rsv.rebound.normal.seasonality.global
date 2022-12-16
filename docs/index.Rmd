@@ -1,6 +1,6 @@
 ---
 title: Understanding the patterns of global re-emergence of RSV following COVID19 pandemic
-author: "By Deus Thindwa"
+author: "Deus Thindwa"
 date: "01/12/2022"
 output:
   html_document: default
@@ -17,7 +17,10 @@ output:
 }
 </style>
 ```
-##### Load required packages for entire project
+
+&nbsp;
+
+### Load required packages for entire project
 
 ```{r LoadPackages, results = 'hide', message = FALSE, warning = FALSE}
 library(here)
@@ -25,7 +28,9 @@ source(here("script", "1_mainRSV.R"))
                         
 ```
 
-##### Run the archiving script to update the RSV dataset
+&nbsp;
+
+### Run the archiving script to update the RSV dataset
 
 ```{r RunFileCache, results = "hide", message = FALSE, warning = FALSE}
 
@@ -34,7 +39,9 @@ source(here("script", "3_runIfExpired.R"))
 
 ```
 
-##### Load RSV datasets
+&nbsp;
+
+### Load RSV datasets
 
 ```{r LoadRSVdata, results = "hide", message = FALSE, warning = FALSE}
 
@@ -42,120 +49,43 @@ source(here("script", "4_loadRSVdata.R"))
 
 ```
 
-##### Yearly plotting RSV cases for Africa/South East Asia/Middle East/Western pacific
+&nbsp;
 
-```{r PlotRSV1, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+### Seasonal dynamics of RSV by region
 
-rsvds_clean %>%
-  dplyr::filter(country %in% c("Cameroon", "Central African Republic", "Côte d'Ivoire", "Madagascar",
-                               "Mozambique", "Uganda", "South Africa", 
-                               "India",
-                               "Australia", "Japan", "Mongolia", "Malaysia",
-                               "Oman", "Qatar")) %>%
-  ggplot(aes(x = date(date), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
+```{r PlotRSV1, message = FALSE, warning = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+
+source(here("script", "5_seasRSV_region.R"))
 
 ```
 
-##### Yearly plotting RSV cases in Europe
+&nbsp;
 
-```{r PlotRSV2, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+### Seasonal dynamics of RSV in African, South East Asia, Western Pacific and Middle East countries
 
-rsvds_clean %>%
-  dplyr::filter(
-    country %in% c("France", "Germany", "Netherlands", "Spain", "Portugal", "Iceland",
-                   "Ireland", "Denmark", "Finland", "Sweden", "Malta", "United Kingdom, England", 
-                   "United Kingdom, Northern Ireland", "United Kingdom, Scotland",
-                   "Bulgaria", "Belarus", "Russian Federation", "Hungary", "Poland", "Slovakia")) %>%
-  mutate(country = if_else(country == "United Kingdom, Northern Ireland", "N Ireland",
-                           if_else(country == "United Kingdom, Scotland", "Scotland",
-                                   if_else(country == "United Kingdom, England", "England",
-                                           if_else(country == "Russian Federation","Russia", country))))) %>%
-  ggplot(aes(x = date(date), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
+```{r PlotRSV2, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 7, fig.align = 'center'}
+
+source(here("script", "6_seasRSV_asmw.R"))
 
 ```
 
-##### Yearly plotting RSV cases in Americas
+&nbsp;
 
-```{r PlotRSV3, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+### Seasonal dynamics of RSV in European countries
 
-rsvds_clean %>%
-  dplyr::filter(
-    country %in% c("Argentina", "Belize", "Bolivia (Plurinational State of)", "Brazil", "Canada", "Colombia", "Costa Rica",
-                   "Dominican Republic", "Ecuador", "El Salvador", "Guatemala", "Honduras", "Mexico",
-                   "Nicaragua", "Panama", "Paraguay", "Peru", "Uruguay")) %>%
-  mutate(country = if_else(country == "Bolivia (Plurinational State of)", "Bolivia",
-                           if_else(country == "Dominican Republic", "Dominica", country))) %>%
-  ggplot(aes(x = date(date), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
+```{r PlotRSV3, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 7, fig.align = 'center'}
+
+source(here("script", "7_seasRSV_europe.R"))
 
 ```
 
-##### Monthly plotting RSV cases for Africa/South East Asia/Middle East/Western pacific
+&nbsp;
 
-```{r PlotRSV4, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
+### Seasonal dynamics of RSV in Americas countries
 
-rsvds_clean %>%
-  dplyr::filter(country %in% c("Cameroon", "Central African Republic", "Côte d'Ivoire", "Madagascar",
-                               "Mozambique", "Uganda", "South Africa", 
-                               "India",
-                               "Australia", "Japan", "Mongolia", "Malaysia",
-                               "Oman", "Qatar")) %>%
-  ggplot(aes(x = factor(month(date)), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
+```{r PlotRSV4, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 7, fig.align = 'center'}
+
+source(here("script", "8_seasRSV_americas.R"))
 
 ```
 
-##### Monthly plotting RSV cases in Europe
-
-```{r PlotRSV5, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
-
-rsvds_clean %>%
-  dplyr::filter(
-    country %in% c("France", "Germany", "Netherlands", "Spain", "Portugal", "Iceland",
-                   "Ireland", "Denmark", "Finland", "Sweden", "Malta", "United Kingdom, England", 
-                   "United Kingdom, Northern Ireland", "United Kingdom, Scotland",
-                   "Bulgaria", "Belarus", "Russian Federation", "Hungary", "Poland", "Slovakia")) %>%
-  mutate(country = if_else(country == "United Kingdom, Northern Ireland", "N Ireland",
-                           if_else(country == "United Kingdom, Scotland", "Scotland",
-                                   if_else(country == "United Kingdom, England", "England",
-                                           if_else(country == "Russian Federation","Russia", country))))) %>%
-  ggplot(aes(x = factor(month(date)), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
-
-```
-
-##### Monthly plotting RSV cases in Americas
-
-```{r PlotRSV6, message = FALSE, warning = FALSE, echo = FALSE, fig.width = 12, fig.height = 6, fig.align = 'center'}
-
-rsvds_clean %>%
-  dplyr::filter(
-    country %in% c("Argentina", "Belize", "Bolivia (Plurinational State of)", "Brazil", "Canada", "Colombia", "Costa Rica",
-                   "Dominican Republic", "Ecuador", "El Salvador", "Guatemala", "Honduras", "Mexico",
-                   "Nicaragua", "Panama", "Paraguay", "Peru", "Uruguay")) %>%
-  mutate(country = if_else(country == "Bolivia (Plurinational State of)", "Bolivia",
-                           if_else(country == "Dominican Republic", "Dominica", country))) %>%
-  ggplot(aes(x = factor(month(date)), y = cases)) +
-  geom_line() + 
-  facet_wrap(. ~ country, scales = "free_y") +
-  theme_bw(base_size = 10, base_family = "Lato") +
-  labs(title = , x = "MMWR Date", y = "RSV cases")
-
-```

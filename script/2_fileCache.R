@@ -1,3 +1,9 @@
+#By Deus Thindwa
+#18/11/2022
+#global reemergence of RSV onset, duration and peak
+
+#====================================================================
+
 #From Dan Weinberger (archiving)
 
 ##FROM excessILI package, Marcus Russi
