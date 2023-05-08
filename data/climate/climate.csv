@@ -1,0 +1,50 @@
+country,wk_scale,clim_zone,latitude,out_seas21
+Belize,normal,Tropical,15-N,no
+Bolivia,normal,Tropical,15-S,no
+Canada,inverted,Temperate,45-N,no
+Central African Republic,normal,Tropical,00-C,no
+Costa Rica,normal,Tropical,15-N,no
+England,inverted,Temperate,60-N,no
+France,inverted,Temperate,45-N,no
+Guatemala,inverted,Tropical,15-N,no
+Honduras,inverted,Tropical,15-N,no
+Hungary,inverted,Temperate,45-N,no
+India,normal,Tropical,30-N,no
+Ireland,inverted,Temperate,60-N,no
+Ivory Coast,normal,Tropical,00-C,no
+Madagascar,inverted,Tropical,15-S,no
+Mexico,inverted,Sub-tropical,30-N,no
+Nicaragua,normal,Tropical,15-N,no
+Paraguay,normal,Sub-tropical,30-S,no
+Qatar,inverted,Sub-tropical,30-N,no
+Slovakia,inverted,Sub-tropical,45-N,no
+South Africa,normal,Sub-tropical,30-S,no
+Uruguay,normal,Temperate,30-S,no
+Australia,normal,Sub-tropical,30-S,yes
+Brazil,inverted,Tropical,15-S,yes
+Bulgaria,inverted,Temperate,45-N,yes
+Colombia,normal,Tropical,00-C,yes
+Denmark,inverted,Temperate,60-N,yes
+Dominican,normal,Tropical,15-N,yes
+Ecuador,inverted,Tropical,00-C,yes
+El Salvador,normal,Tropical,15-N,yes
+Germany,inverted,Temperate,45-N,yes
+Iceland,inverted,Temperate,60-N,yes
+Japan,normal,Temperate,45-N,yes
+Malaysia,normal,Tropical,00-C,yes
+Mongolia,inverted,Sub-tropical,45-N,yes
+Netherlands,inverted,Temperate,45-N,yes
+Northern Ireland,inverted,Temperate,60-N,yes
+Oman,inverted,Sub-tropical,30-N,yes
+Panama,inverted,Tropical,15-N,yes
+Peru,normal,Sub-tropical,15-S,yes
+Portugal,inverted,Sub-tropical,45-N,yes
+Scotland,inverted,Temperate,60-N,yes
+Spain,inverted,Sub-tropical,45-N,yes
+Sweden,inverted,Temperate,60-N,yes
+United States,inverted,Temperate,45-N,yes
+Argentina,normal,Sub-tropical,45-S,yes
+United States Mid West,inverted,,,
+United States North East,inverted,,,
+United States South,inverted,,,
+United States West,inverted,,,
