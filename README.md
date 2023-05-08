@@ -1,2 +1,2 @@
 # RSV Global
-Understanding the patterns of global re-emergence of RSV following COVID19 pandemic
+Rebound to normal RSV dynamics post COVID-19 suppression
