@@ -51,11 +51,17 @@ source("script/08_computeGrowth.R")
 #plot RSV growth rates
 source("script/08_plotGrowth.R")
 
-#regression models of onset, peak and growth rates
-source("script/09_computeRegress.R")
+#compute intensity
+source("script/09_computeIntensity.R")
 
-#plot regression output of onset, peak and growth rates
-source("script/09_plotRegress.R")
+#plot RSV intensity
+source("script/09_plotIntensity.R")
 
-#compute and plot US sesonal metrics postCOVID-19
-source("script/10_subanalysisUS.R")
+#regression models of onset, peak, growth rates and intensity
+source("script/10_computeRegress.R")
+
+#plot regression output of onset, peak, growth rates and intensity
+source("script/10_plotRegress.R")
+
+#compute and plot US sesonal metrics
+source("script/11_subanalysisUS.R")

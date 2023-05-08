@@ -23,6 +23,21 @@ stringency <-
   mutate(country = ifelse(country == "Scotland", "Northern Ireland", country)) %>%
   bind_rows(stringency)
 
+#decide whether country was out of season in 2021 using onset data and some threshold
+climate <-
+  climate %>%
+  dplyr::left_join(
+    rsv_onset %>%
+      dplyr::mutate(row = row_number()) %>%
+      tidyr::pivot_wider(names_from = covper, values_from = epiwk) %>%
+      dplyr::select(everything(), -row) %>%
+      dplyr::group_by(country) %>%
+      tidyr::fill(precov, .direction = "up") %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(!is.na(precov), !is.na(y2021)) %>%
+      dplyr::mutate(out_seas21 = ifelse(abs(precov-y2021) >8.69, "yes", "no")) %>% #more than 2 months out of season in 2021 = yes
+      dplyr::select(country, out_seas21)) 
+
 #================================================================
 # CREATE DATASET FOR TIME TO ONSET WEEK IN 2021
 #================================================================
@@ -567,7 +582,7 @@ DSgrowth2 <-
          out_seas212 = as.factor(out_seas21))
 
 #fit the model & store model fitted values
-Modgrowth2 = lm(pks2 ~ hemi2 + clim_zone2 + region2 + out_seas212 + strin_indx2 + pop_dens2 + med_age2, 
+Modgrowth2 = lm(pks ~ hemi2 + clim_zone2 + region2 + out_seas212 + strin_indx2 + pop_dens2 + med_age2, 
                 data = DSgrowth2)
 get_regression_table(Modgrowth2, conf.level = 0.95) %>% kable()
 DSgrowth2Mod <- get_regression_table(Modgrowth2, conf.level = 0.95)
