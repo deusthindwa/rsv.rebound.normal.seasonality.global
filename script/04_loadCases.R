@@ -666,3 +666,24 @@ climate <-
 rsv_all <-
 rsv_all %>%
   dplyr::filter(date <= date("2023-02-28"))
+
+#================================================================
+# DOWNLOAD AND BUILD A STRINGENCY DATASET
+#================================================================
+
+#input dynamics stringency dataset
+stringency <- read.csv(curl("https://covid.ourworldindata.org/data/owid-covid-data.csv"))
+
+stringency <-
+  stringency %>%
+  dplyr::select(location, date, stringency_index, population_density, median_age) %>%
+  dplyr::rename("country" = location, "fdate" = date, "strin_indx" = stringency_index, "pop_dens" = population_density, "med_age" = median_age) %>%
+  dplyr::filter(!is.na(strin_indx)) %>%
+  dplyr::mutate(fdate = date(fdate),
+                country = ifelse(country == "United Kingdom", "Scotland", country))
+
+stringency <-
+  stringency %>%
+  dplyr::filter(country == "Scotland") %>%
+  dplyr::mutate(country = ifelse(country == "Scotland", "Northern Ireland", country)) %>%
+  dplyr::bind_rows(stringency)

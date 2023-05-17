@@ -7,10 +7,10 @@
 
 #definition of RSV onset
 #disease onset calculations and intuition
-#when the first derivative is positive, the original curve is increasing. 
-#in epidemic, this corresponds to the early stage of an outbreak as cases are increasing. 
-#when the second derivative reach its maximum in the segment that the first derivative is positive, it means that the growth rate of the increasing trend reach its maximum. 
-#this fits for the definition of the starting point of an disease outbreak.   
+#when the first derivative is positive, the original curve is increasing.
+#in epidemic, this corresponds to the early stage of an outbreak as cases are increasing.
+#when the second derivative reach its maximum in the segment that the first derivative is positive, it means that the growth rate of the increasing trend reach its maximum.
+#this fits for the definition of the starting point of an disease outbreak.
 
 #====================================================================
 
@@ -86,6 +86,12 @@ onset.samples_temp <- list()
 
 #runs simulations on an outbreak GAM to estimate time series outbreak outcomes 
 #and returns estimated time series outcomes for each simulation.
+#works by using generalized additive models (GAMs) with penalized basis splines (P-splines) 
+#to approximate the observed data. Approximating splines are sampled from their distribution, 
+#and for each approximating spline, the outcome measure of interest is calculated. 
+#This yields a sampling distribution of the outcome measure of interest, 
+#from which point and itnerval estimates can then be obtained.
+
 for (i in names(X)){
   cases.samples[[i]] = pspline.sample.timeseries(Gmodels[[i]], 
                                                  data.frame(wk = t), 
