@@ -255,4 +255,4 @@ ggsave(here("output", "fig5_intensitySupp.png"),
        width = 20, height = 22, unit="in", dpi = 300)
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|rsv_intens", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|rsv_intens|stringency", ls(), value = TRUE, invert = TRUE))

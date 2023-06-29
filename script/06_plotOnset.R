@@ -278,4 +278,4 @@ ggsave(here("output", "fig2_onsetMain.png"),
        width = 22, height = 18, unit = "in", dpi = 300)
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|stringency", ls(), value = TRUE, invert = TRUE))

@@ -273,4 +273,4 @@ rsv_onset <-
   dplyr::filter(n == 3)
 
 #delete all temporary variables and keep usable objects
-rm(list = grep("rsv_all|climate|rsv_onset", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|stringency", ls(), value = TRUE, invert = TRUE))

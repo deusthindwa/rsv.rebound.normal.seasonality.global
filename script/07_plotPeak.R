@@ -297,4 +297,4 @@ ggsave(here("output", "fig3_peakSupp.png"),
 
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|stringency", ls(), value = TRUE, invert = TRUE))

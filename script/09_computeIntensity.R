@@ -109,4 +109,4 @@ rsv_intens2 <-
   dplyr::left_join(climate %>% dplyr::select(country, clim_zone)) %>%
   dplyr::left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct(.keep_all = TRUE))
 
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|rsv_intens", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|rsv_intens|stringency", ls(), value = TRUE, invert = TRUE))

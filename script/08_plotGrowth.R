@@ -258,4 +258,4 @@ ggsave(here("output", "fig4_growthSupp.png"),
        width = 20, height = 22, unit="in", dpi = 300)
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|stringency", ls(), value = TRUE, invert = TRUE))

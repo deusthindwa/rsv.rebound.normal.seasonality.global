@@ -8,10 +8,10 @@
 if(!require(pacman)) install.packages("pacman")
 
 #use pacman to load packages for analysis
-pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr",  "mvtnorm", "zoo", "stringr", "survminer",
-                        "patchwork", "PropCIs", "reshape2","purrr", "minqa", "ggridges", "timetk", "ggbreak", "ggpubr", "gridExtra", "readr", "survival",
-                        "curl", "archive", "jsonlite", "janitor", "ggh4x", "distcrete", "epitrix", "mgcv", "pspline.inference", "RCurl", "XML", "psych", "ie2misc", 
-                        "rlist", "tsibble", "htmlwidgets", "plotly", "utils", "MLmetrics", "circular", "gsignal", "moderndive", "knitr", "Smisc", "here"))
+pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr",  "mvtnorm", "zoo", "stringr", "survminer", "TSclust",
+                        "patchwork", "PropCIs", "reshape2","purrr", "minqa", "ggridges", "timetk", "ggbreak", "ggpubr", "gridExtra", "readr", "survival", "dtw", "cluster",
+                        "curl", "archive", "jsonlite", "janitor", "ggh4x", "distcrete", "epitrix", "mgcv", "pspline.inference", "RCurl", "XML", "psych", "ie2misc", "ggdendro", 
+                        "rlist", "tsibble", "htmlwidgets", "plotly", "utils", "MLmetrics", "circular", "gsignal", "moderndive", "knitr", "dtwclust", "dendextend", "here"))
 
 #set seed for entire session to ensure reproducibility using a task call
 addTaskCallback(function(...) {set.seed(12345); TRUE})
@@ -42,7 +42,7 @@ source("script/06_plotOnset.R")
 #compute RSV peak timing 
 source("script/07_computePeak.R")
 
-#plot RSV peak timing plots
+#plot RSV peak timing
 source("script/07_plotPeak.R")
 
 #compute RSV growth rates
@@ -57,11 +57,11 @@ source("script/09_computeIntensity.R")
 #plot RSV intensity
 source("script/09_plotIntensity.R")
 
-#regression models of onset, peak, growth rates and intensity
-source("script/10_computeRegress.R")
+#compute and plot univariate regression models of onset, peak, growth rates and intensity
+source("script/10_univarRegress.R")
 
-#plot regression output of onset, peak, growth rates and intensity
-source("script/10_plotRegress.R")
+#compute multivariate regression output of onset, peak, growth rates and intensity
+source("script/11_multivarRegress.R")
 
-#compute and plot US sesonal metrics
-source("script/11_subanalysisUS.R")
+#dynamic time warping and time series classification
+source("script/11_multivarRegress.R")
