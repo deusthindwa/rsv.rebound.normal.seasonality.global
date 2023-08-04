@@ -9,14 +9,12 @@ X <-
   rbind(
 
     #set southern hemisphere countries to start from 1st week of 2020 to 52th week of 2022
-    X0 <-
       rsv_all %>%
       dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa") &
                       date >= date("2020-01-08") & 
                       date <= date("2022-12-31")),
 
     #set northern hemisphere countries to start from 24th week of 2020 to 23rd week of 2023
-      X1 <-
       rsv_all %>%
       dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") &
                       date >= date("2020-06-11") &
