@@ -64,4 +64,7 @@ source("script/10_univarRegress.R")
 source("script/11_multivarRegress.R")
 
 #dynamic time warping and time series classification
-source("script/11_multivarRegress.R")
+source("script/12_dynTimeWarp.R")
+
+#dynamic time warping and time series classification
+source("script/13_computeDesc.R")

@@ -72,7 +72,7 @@ B <-
   theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
 
 #combined plots and saving
-ggsave(here("output", "fig1_tsdynSupp.png"),
+ggsave(here("output", "fig2_tsdyn.png"),
        plot = (A | B | plot_layout(ncol = 2, width = c(2.3, 1))),
        width = 25, height = 13, unit="in", dpi = 300)
 
@@ -100,13 +100,10 @@ for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan"
   X[[i]] <-    
     rsv_weekly %>%
     dplyr::mutate(covid = if_else(date < "2020-01-01", " PreCOVID (2017-19) mean cases", 
-                                  if_else(year(date) == 2020, NA_character_, 
+                                  if_else(year(date) == 2020, "2020", 
                                           if_else(year(date) == 2021, "2021",
                                                   if_else(year(date) == 2022, "2022",
-                                                          if_else(year(date) == 2023, "2023",
-                                                                  if_else(year(date) == 2024, "2024",
-                                                                          if_else(year(date) == 2025, "2025",
-                                                                                  if_else(year(date) == 2026, "2026", "2027")))))))),
+                                                          if_else(year(date) == 2023, "2023", NA_character_))))),
                   seas = yr) %>%
     dplyr::filter(!is.na(covid), country == i) %>%
     dplyr::group_by(country, wk, covid) %>%
@@ -143,8 +140,9 @@ for (i in c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Icel
     
     #compute the cases by covid period
     dplyr::mutate(covid = if_else(seas == "2017/18" | seas == "2018/19" | seas == "2019/20", " PreCOVID (2017-19) mean cases",
+                                  if_else(seas == "2020/21", "2020/21",
                                   if_else(seas == "2021/22", "2021/22", 
-                                          if_else(seas == "2022/23", "2022/23", NA_character_)))) %>%
+                                          if_else(seas == "2022/23", "2022/23", NA_character_))))) %>%
     dplyr::filter(!is.na(covid), country == i) %>%
     dplyr::group_by(country, wk, covid) %>%
     dplyr::mutate(cases = mean(cases, rm.na = TRUE)) %>%
@@ -166,7 +164,7 @@ C <-
   geom_line(size = 1.5) +
   geom_point(aes(x = newWk, y = newCases, color = covid), size = 2) +
   scale_colour_brewer(palette = 7, direction = 1) + 
-  labs(title = "", x = "Reporting week", y = "Weekly RSV cases") +
+  labs(title = "", x = "Reporting week", y = "RSV cases") +
   guides(color = guide_legend(title = "")) +
   scale_x_discrete(breaks = seq(1, 52, 6)) +
   scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
@@ -190,11 +188,11 @@ D <-
   theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
 
 #combined plots and saving
-ggsave(here("output", "fig1_wkdynMain.png"),
+ggsave(here("output", "sfig1_wkdyn.png"),
        plot = (C | D | plot_layout(ncol = 2, width = c(2.3, 1))),
        width = 25, height = 13, unit="in", dpi = 300)
 
 #====================================================================
 
 #delete all temporary datasets
-rm(list = grep("rsv_all|climate", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|stringency", ls(), value = TRUE, invert = TRUE))

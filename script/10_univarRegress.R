@@ -1,6 +1,18 @@
-#Authors: Deus & Dan
+ #Authors: Deus & Dan
 #Date: 01/03/2023
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
+
+#====================================================================
+#MAKE ALL RSV ONSET/PEAK/GROWTH/INTENSITY CORRELATION PLOTS
+#====================================================================
+
+ggsave(here("output", "fig3_corHemisphere.png"),
+       plot = ((A1/A2) | (B1/B2))/((C1/C2) | (D1/D2)),
+       width = 22, height = 18, unit = "in", dpi = 300)
+
+ggsave(here("output", "sfig7_corClimatezone.png"),
+       plot = ((A3/A4) | (B3/B4))/((C3/C4) | (D3/D4)),
+       width = 22, height = 18, unit = "in", dpi = 300)
 
 #================================================================
 # OUT OF SEASON STATUS
@@ -22,7 +34,7 @@ climate <-
       dplyr::select(country, out_seas21)) 
 
 #================================================================
-# CREATE DATASET FOR TIME TO ONSET WEEK IN 2021
+# CREATE DATASET FOR TIME TO ONSET WEEK DURING FIRST WAVE
 #================================================================
 
 #time to first onset in 2021 from 2020 COVID-19 suppression in July
@@ -69,7 +81,7 @@ DSonset1 %>%
   dplyr::select(country, event, everything())
 
 #================================================================
-# CREATE DATASET FOR TIME TO ONSET WEEK IN 2022
+# CREATE DATASET FOR TIME TO ONSET WEEK DURING SECOND WAVE
 #================================================================
 
 #time to second onset post-COVID-19 from 2021 COVID-19 suppression
@@ -119,7 +131,7 @@ DSonset2 <-
   dplyr::select(country, event, everything())
 
 #================================================================
-# CREATE DATASET FOR TIME TO PEAK WEEK IN 2021
+# CREATE DATASET FOR TIME TO PEAK WEEK FIRST WAVE
 #================================================================
 
 #time to first onset in 2021 from 2020 COVID-19 suppression in July
@@ -166,7 +178,7 @@ DSpeak1 <-
   dplyr::select(country, event, everything())
 
 #================================================================
-# CREATE DATASET FOR TIME TO PEAK WEEK IN 2022
+# CREATE DATASET FOR TIME TO PEAK WEEK DURING SECOND WAVE
 #================================================================
 
 #time to second onset post-COVID-19 from 2021 COVID-19 suppression
@@ -216,7 +228,7 @@ DSpeak2 <-
   dplyr::select(country, event, everything())
 
 #================================================================
-# CREATE DATASET FOR GROWTH RATE 2021
+# CREATE DATASET FOR GROWTH RATE DURING FIRST WAVE
 #================================================================
 
 #create dataset for regression
@@ -248,7 +260,7 @@ DSgrowth1 <-
   )
 
 #================================================================
-# CREATE DATASET FOR GROWTH RATE 2022
+# CREATE DATASET FOR GROWTH RATE DURING SECOND WAVE
 #================================================================
 
 #create dataset for regression
@@ -280,7 +292,7 @@ DSgrowth2 <-
   )
 
 #================================================================
-# CREATE DATASET FOR INTENSITY 2021
+# CREATE DATASET FOR INTENSITY DURING FIRST WAVE
 #================================================================
 
 #create dataset for regression
@@ -312,7 +324,7 @@ DSintens1 <-
   )
 
 #================================================================
-# CREATE DATASET FOR INTENSITY 2022
+# CREATE DATASET FOR INTENSITY DURING SECOND WAVE
 #================================================================
 
 #create dataset for regression
@@ -383,7 +395,7 @@ DSpeak2 <-
 # UNIVARIATE REGRESSION ANALYSES
 #================================================================
 
-#ONSET 2021
+#ONSET DURING FIRST WAVE
 #standardize all continuous variables
 DSonset1 <- 
   DSonset1 %>% 
@@ -395,17 +407,16 @@ DSonset1 <-
 DSonset1 <- 
   DSonset1 %>% 
   mutate(hemi2 = as.factor(hemi),
-         clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region))
+         clim_zone2 = as.factor(clim_zone))
 
 #fit univariate models
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2")) {
-  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000)), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X1 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Onset timing 2021") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2")) {
+  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X1 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Onset timing 2021") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#ONSET 2022
+#ONSET DURING SECOND WAVE
 #standardize all continuous variables
 DSonset2 <- 
   DSonset2 %>% 
@@ -419,17 +430,16 @@ DSonset2 <-
   DSonset2 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit univariate models
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
-  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000)), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X2 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Onset timing 2022") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
+  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X2 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Onset timing 2022") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#PEAK 2021
+#PEAK DURING FIRST WAVE
 #standardize all continuous variables
 DSpeak1 <- 
   DSpeak1 %>% 
@@ -441,17 +451,16 @@ DSpeak1 <-
 DSpeak1 <- 
   DSpeak1 %>% 
   mutate(hemi2 = as.factor(hemi),
-         clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region))
+         clim_zone2 = as.factor(clim_zone))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2")) {
-  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak1, control = coxph.control(iter.max = 1000)), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X3 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Peak timing 2021") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2")) {
+  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak1, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X3 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Peak timing 2021") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#PEAK 2022
+#PEAK DURING SECOND WAVE
 #standardise all continuous variables
 DSpeak2 <- 
   DSpeak2 %>% 
@@ -465,17 +474,16 @@ DSpeak2 <-
   DSpeak2 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
-  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000)), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X4 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Peak timing 2022") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
+  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X4 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Peak timing 2022") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#GROWTH 2021
+#GROWTH DURING FIRST WAVE
 #standardise all continuous variables
 DSgrowth1 <- 
   DSgrowth1 %>% 
@@ -489,17 +497,16 @@ DSgrowth1 <-
   DSgrowth1 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212")) {
-  X[[i]] <- print(tidy(lm(as.formula(paste0("pks2 ~", i)), data = DSgrowth1), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X5 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Growth rate 2021") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212")) {
+  X[[i]] <- print(tidy(lm(as.formula(paste0("pks2 ~", i)), data = DSgrowth1), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X5 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Growth rate 2021") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#GROWTH 2022
+#GROWTH DURING SECOND WAVE
 #standardise all continuous variables
 DSgrowth2 <- 
   DSgrowth2 %>% 
@@ -514,17 +521,16 @@ DSgrowth2 <-
   DSgrowth2 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
-  X[[i]] <- print(tidy(lm(as.formula(paste0("pks2 ~", i)), data = DSgrowth2), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X6 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Growth rate 2022") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
+  X[[i]] <- print(tidy(lm(as.formula(paste0("pks2 ~", i)), data = DSgrowth2), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X6 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Growth rate 2022") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#INTENSITY 2021
+#INTENSITY DURING FIRST WAVE
 #standardise all continuous variables
 DSintens1 <- 
   DSintens1 %>% 
@@ -538,17 +544,16 @@ DSintens1 <-
   DSintens1 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212")) {
-  X[[i]] <- print(tidy(lm(as.formula(paste0("intensity2 ~", i)), data = DSintens1), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X7 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Intensity 2021") %>% dplyr::filter(term != "(Intercept)")
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212")) {
+  X[[i]] <- print(tidy(lm(as.formula(paste0("intensity2 ~", i)), data = DSintens1), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X7 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Intensity 2021") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 
-#INTENSITY 2022
+#INTENSITY DURING SECOND WAVE
 #standardise all continuous variables
 DSintens2 <- 
   DSintens2 %>% 
@@ -563,56 +568,10 @@ DSintens2 <-
   DSintens2 %>% 
   mutate(hemi2 = as.factor(hemi),
          clim_zone2 = as.factor(clim_zone),
-         region2 = as.factor(region),
          out_seas212 = as.factor(out_seas21))
 
 #fit the models iteratively & store model fitted values
 X <- list()
-for (i in c("hemi2", "clim_zone2", "region2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
-  X[[i]] <- print(tidy(lm(as.formula(paste0("intensity2 ~", i)), data = DSintens2), exponentiate = FALSE, conf.int = TRUE, conf.level = 0.95))}
-X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Intensity 2022") %>% dplyr::filter(term != "(Intercept)")
-
-dslevels = c("Onset timing 2021", "Onset timing 2022", "Peak timing 2021", "Peak timing 2022", "Growth rate 2021", "Growth rate 2022", "Intensity 2021", "Intensity 2022")
-
-DSregressUv <- 
-  dplyr::bind_rows(X1, X2, X3, X4, X5, X6, X7, X8) %>%
-  dplyr::group_by(term) %>%
-  dplyr::mutate(widthx = 0.1*n()) %>% #fix the problem of differing errobar width due to different number of terms in the dataset
-  dplyr::mutate(term = case_when(term == "clim_zone2Sub-tropical" ~ "Climate Zone \n Subtropical (vs temperate)",
-                                 term == "clim_zone2Tropical" ~ "Climate Zone \n Tropical (vs temperate)",
-                                 term == "hemi2Southern hemisphere" ~ "Hemisphere \n Southern (vs Northern)",
-                                 term == "intens20212" ~ "RSV intensity in 2021",
-                                 term == "med_age2" ~ "Population median age",
-                                 term == "out_seas212yes" ~ "RSV out-of-season in 2021, yes",
-                                 term == "pop_dens2" ~ "Population density",
-                                 term == "region2Africa & SEA" ~ "Region \n Africa/SEA (vs Europe)",
-                                 term == "region2Eastern Mediterranean" ~ "Region \n Eastern Mediterranean (vs Europe)",
-                                 term == "region2North Americas" ~ "Region \n North Americas (vs Europe)",
-                                 term == "region2South Americas" ~ "Region \n South Americas (vs Europe)",
-                                 term == "region2Western Pacific" ~ "Region \n Western Pacific (vs Europe)",
-                                 term == "strin_indx2" ~ "Contact stringency",
-                                 TRUE ~ NA_character_)) %>%
-dplyr::ungroup()
-
-A <-
-  DSregressUv %>%
-  ggplot(aes(y = reorder(term, ds), x = estimate, color = ds, width = widthx)) +
-  geom_point(shape = 16, size = 4, stroke = 2, position = position_dodge(width = 0.5)) + 
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0, size = 1.5, position = position_dodge(width = 0.5)) +
-  geom_vline(xintercept = 0, color = "black", linetype = "dashed", cex = 0.6, alpha = 0.8) +
-  labs(title = "", x = "Log-scale estimates from univariate regression models with 95%CI", y = "") + 
-  facet_grid(.~ factor(ds, dslevels), scales = "free_x") +
-  theme_bw(base_size = 15, base_family = 'Lato') +
-  guides(color = guide_legend(title = "")) +
-  theme(legend.position = "none", strip.text.x = element_text(size = 16)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))  + 
-  scale_color_manual(values=c("#F8766D", "#00BFC4", "#A9A9A9", "#36454F", "#7CAE00", "#C77CFF", "#FFC133", "#7D33FF"))
-
-ggsave(here("output", "fig6_regressUnivariate.png"),
-       plot = A,
-       width = 21, height = 10, unit="in", dpi = 300)
-
-#export univariate estimates
-rio::export(DSregressUv, here("output", "table2021_22_univariate.xlsx"))
-
-rm(X1, X2, X3, X4, X5, X6, X7, X8, X, A, i, dslevels)
+for (i in c("hemi2", "clim_zone2", "strin_indx2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
+  X[[i]] <- print(tidy(lm(as.formula(paste0("intensity2 ~", i)), data = DSintens2), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Intensity 2022") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)

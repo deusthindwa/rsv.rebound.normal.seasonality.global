@@ -5,18 +5,28 @@
 #====================================================================
 
 #split the dataset by country to form list of datasets
-X <- 
-  rsv_all %>%  
-  dplyr::filter(country %in% c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", 
-                               "Peru", "South Africa", "Brazil", "Canada", "Denmark", "France", "Germany", 
-                               "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", 
-                               "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) %>%
-  dplyr::filter(yr >= 2021) %>%
+X <-
+  rbind(
+
+    #set southern hemisphere countries to start from 1st week of 2020 to 52th week of 2022
+    X0 <-
+      rsv_all %>%
+      dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa") &
+                      date >= date("2020-01-08") & 
+                      date <= date("2022-12-31")),
+
+    #set northern hemisphere countries to start from 24th week of 2020 to 23rd week of 2023
+      X1 <-
+      rsv_all %>%
+      dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") &
+                      date >= date("2020-06-11") &
+                      date < date("2023-06-04"))
+  ) %>%
+  arrange(country, date) %>%
   group_by(country) %>%
   dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n())) %>%
   dplyr::ungroup() %>%
   dplyr::select(country, seqwk, cases) %>%
-  dplyr::arrange(country, seqwk, cases) %>%
  
   #dplyr::select(seqwk, seqwk2, cases, country) %>%
   base::split(list(.$country))
@@ -48,21 +58,27 @@ for (i in names(X)){
     dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n()))
 }
 
+#create a list for hierarchical clustering
+Dshc <- dplyr::bind_rows(DsTs, .id = "country") 
+Dshc <- Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqwk)
+Dshc <- as.list(Dshc)
+
 #====================================================================
 #DYNAMIC TIME WARPING (DTW)
 #====================================================================
 
 #DTW cluster evaluation to determine window size
-cfg <- compare_clusterings_configs(
+cfg <- dtwclust::compare_clusterings_configs(
   types = "hierarchical", 
-  k = 4L, 
-  #preprocs = pdc_configs("preproc", zscore),
+  k = 2L:4L, 
   controls = list(hierarchical = hierarchical_control(method = "average")), 
-  distances = pdc_configs("distance", hierarchical = list(dtw_basic = list(window.size = seq(from = 1L, to = 104L, by = 1L), norm = c("L1")))),
+  distances = pdc_configs("distance", hierarchical = list(dtw = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
+  centroids = pdc_configs("centroid", hierarchical = list(dba = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
+  preprocs = pdc_configs("preproc", hierarchical = list(zscore = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
   no.expand = c("window.size", "norm" ))
 
 evaluators <- cvi_evaluators(c("DBstar", "DB"))
-comparison <- compare_clusterings(dtw_Dshc, 
+comparison <- compare_clusterings(Dshc, 
                                   types = "hierarchical", 
                                   configs = cfg, 
                                   seed = 8L, 
@@ -75,88 +91,221 @@ hc_wsize <-
   as.data.frame(
     (comparison$results$hierarchical[, c("distance", 
                                          "window.size_distance", 
-                                         "DBstar")])) %>%
-    rename("value" = "DBstar") %>%
-    mutate(cvix = "Modified Davies-Bouldin"),
+                                         "DBstar",
+                                         "k")])) %>%
+    dplyr::rename("value" = "DBstar") %>%
+    dplyr::mutate(cvix = "Modified Davies-Bouldin"),
   
   as.data.frame(
     (comparison$results$hierarchical[, c("distance", 
                                          "window.size_distance", 
-                                         "DB")])) %>%
-    rename("value" = "DB")%>%
-    mutate(cvix = "Davies-Bouldin")) %>%
-  group_by(cvix) %>%
-  mutate(MinD = min(value),
-         OptimalWs = window.size_distance[which.min(value)]) %>%
-  ungroup()
+                                         "DB",
+                                         "k")])) %>%
+    dplyr::rename("value" = "DB")%>%
+    dplyr::mutate(cvix = "Davies-Bouldin")) %>%
+  dplyr::filter(cvix == "Davies-Bouldin") %>%
+  tidyr::pivot_wider(names_from = k, values_from = value) %>%
+  dplyr::rename("k2" = `2`, "k3" = `3`, "k4" = `4`) %>%
+  dplyr::mutate(Min_k2 = min(k2),
+                OptWs_k2 = window.size_distance[which.min(k2)],
+                Min_k3 = min(k3),
+                OptWs_k3 = window.size_distance[which.min(k3)],
+                Min_k4 = min(k4),
+                OptWs_k4 = window.size_distance[which.min(k4)])
+  
 
 #plot varying window sizes and minimum distance to centroid by cluster validation index
+color <- c("k2" = "red", "k3" = "blue",  "k4" = "green")
 A <-
   hc_wsize %>%
   ggplot() +
-  geom_line(aes(x = window.size_distance, y = value, color = cvix), size = 1) +
-  geom_point(aes(x = OptimalWs, y = MinD, color = cvix), shape = 4, stroke = 1) +
+  geom_line(aes(x = window.size_distance, y = k2, color = "k2"), size = 1) +
+  geom_point(aes(x = OptWs_k2, y = Min_k2, color = "k2"), shape = 4, stroke = 2) +
+  geom_line(aes(x = window.size_distance, y = k3, color = "k3"), size = 1) +
+  geom_point(aes(x = OptWs_k3, y = Min_k3, color = "k3"), shape = 4, stroke = 2) +
+  geom_line(aes(x = window.size_distance, y = k4, color = "k4"), size = 1) +
+  geom_point(aes(x = OptWs_k4, y = Min_k4, color = "k4"), shape = 4, stroke = 2) +
   theme_bw(base_size = 16, base_family = 'Lato') +
-  theme(legend.position = c(0.5, 0.7)) + 
-  guides(color = guide_legend(title = "Cluster Validation Index")) +
+  theme(legend.position = "bottom") + 
+  guides(color = guide_legend(title = "Cluster size, k")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
-  labs(x = "DTW window size", y = "Distance to computed centroid", title = "A")
+  labs(x = "Warping window size", y = "Distance to computed centroid", title = "(A)")
 
-#====================================================================
-
-#create a list for hierarchical clustering
-dtw_Dshc <- dplyr::bind_rows(DsTs, .id = "country") 
-dtw_Dshc <- dtw_Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqwk)
-dtw_Dshc <- as.list(dtw_Dshc)
 
 #hierarchical clustering with dynamic time-warping (DTW)
-dtw_hc <- tsclust(dtw_Dshc,
-                   type = "hierarchical",
-                   k = 4L,
-                   preproc = zscore,
-                   distance = "dtw_basic",
-                   control = hierarchical_control(method = "average"),
-                   args = tsclust_args(dist = list(window.size = 25L))
+dtw_hc <- dtwclust::tsclust(Dshc,
+                            type = "hierarchical",
+                            k = 4L,
+                            preproc = zscore,
+                            distance = "dtw_basic",
+                            control = hierarchical_control(method = "average"),
+                            args = tsclust_args(dist = list(window.size = 13L), cent = dba)
 )
 
 #extract data on clusters and their prototypes
 hc_members <- as.data.frame((ggplot_build(plot(dtw_hc, type = "series", clus = c(1L:4L)))[["data"]]))
 hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus = c(1L:4L)))[["data"]]))
 
-#ggplot methods
+#plot ggdendrogram to show hierarchical clustering
+labs <- label(dendro_data(as.dendrogram(dtw_hc)))
+labs$Cluster <- c(rep("2", 1), rep("4", 6), rep("3", 2), rep("1", 18))
+
 B <-
   ggdendro::ggdendrogram(dtw_hc) +
-  theme_bw(base_size = 16, base_family = 'Lato') +
+  theme_bw(base_size = 18, base_family = 'Lato') +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  labs(title = "B", x = "Hierarchical clustering of countries' time series", y = "Height") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  labs(title = "(A)", x = "Time series hierarchical clustering", y = "Height") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  geom_point(data = labs, aes(x = x, y = 0, colour = Cluster), size = 4) +
+  theme(legend.position = c(0.8,0.7))
 
-#====================================================================
 
+#plot prototypes
 C <-
   dplyr::rows_append(
     hc_members %>%
       dplyr::mutate(cat = "Cluster members") %>%
       dplyr::select(group, colour, x, y, PANEL, cat) %>%
-      dplyr::rename("panex" = "PANEL"),
+      dplyr::rename("Cluster" = "PANEL"),
     
     hc_centroid %>% 
       dplyr::mutate(cat = "Prototypes", "group" = NA) %>%
       dplyr::select(group, colour, x, y, PANEL, cat) %>%
-      dplyr::rename("panex" = "PANEL")) %>%
-  
-  ggplot(aes(x = x, y = y, color = colour)) +
-  geom_line(size = 1) +
-  facet_grid(cat ~ panex) +
-  theme_bw(base_size = 16, base_family = 'Lato') +
+      dplyr::rename("Cluster" = "PANEL")) %>%
+
+  mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
+                           if_else(Cluster == 2, "Cluster 2",
+                                   if_else(Cluster == 3, "Cluster 3",
+                                           if_else(Cluster == 4, "Cluster 4", NA_character_))))) %>%
+
+  ggplot() +
+  geom_line(aes(x = x, y = y, color = colour), size = 2) +
+  facet_grid(cat ~ Cluster) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
   theme(legend.position = "none", legend.title = element_blank()) + 
-  theme(strip.text.y = element_text(size = 16), strip.text.x.top = element_blank()) +
+  theme(strip.text.y = element_text(size = 18), strip.text.x = element_text(size = 18), strip.background = element_rect(fill="white")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
-  labs(x = "Weeks from 2021/22 to 2022/23 seasons", y = "z-normalised", title = "C")
+  labs(x = "Weeks since COVID-19 pandemic onset", y = "z-normalised", title = "(B)")
+
+
+ggsave(here("output", "fig4_dtwClustering.png"),
+       plot = ((B / C)),
+       width = 18, height = 14, unit = "in", dpi = 300)
+
 
 #====================================================================
+#====================================================================
 
-ggsave(here("output", "fig8_dtwClustering.png"),
-       plot = (A | B | C | plot_layout(ncol = 3, width = c(1, 2, 2))),
-       width = 20, height = 11, unit="in", dpi = 300)
+#Sensitivity analysis
+
+#hierarchical clustering with dynamic time-warping (DTW)
+dtw_hc <- dtwclust::tsclust(Dshc,
+                            type = "hierarchical",
+                            k = 2L,
+                            preproc = zscore,
+                            distance = "dtw_basic",
+                            control = hierarchical_control(method = "average"),
+                            args = tsclust_args(dist = list(window.size = 28L), cent = dba)
+)
+
+#extract data on clusters and their prototypes
+hc_members <- as.data.frame((ggplot_build(plot(dtw_hc, type = "series", clus = c(1L:3L)))[["data"]]))
+hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus = c(1L:3L)))[["data"]]))
+
+
+#plot ggdendrogram to show hierarchical clustering
+labs <- label(dendro_data(as.dendrogram(dtw_hc)))
+labs$Cluster <- c(rep("1", 24), rep("2", 3))
+
+S1 <-
+  ggdendro::ggdendrogram(dtw_hc) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  labs(title = "(B)", x = "Time series hierarchical clustering", y = "Height") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  geom_point(data = labs, aes(x = x, y = 0, colour = Cluster), size = 4) +
+  theme(legend.position = c(0.6,0.8))
+
+#plot prototypes
+S2 <-
+  dplyr::rows_append(
+    hc_members %>%
+      dplyr::mutate(cat = "Cluster members") %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL"),
+    
+    hc_centroid %>% 
+      dplyr::mutate(cat = "Prototypes", "group" = NA) %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL")) %>%
+  
+  mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
+                           if_else(Cluster == 2, "Cluster 2", NA_character_))) %>%
+  
+  ggplot() +
+  geom_line(aes(x = x, y = y, color = colour), size = 2) +
+  facet_grid(cat ~ Cluster) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank()) + 
+  theme(strip.text.y = element_text(size = 18), strip.text.x = element_text(size = 18), strip.background = element_rect(fill="white")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  labs(x = "Weeks since COVID-19 pandemic onset", y = "z-normalised", title = "(C)")
+
+
+#hierarchical clustering with dynamic time-warping (DTW)
+dtw_hc <- dtwclust::tsclust(Dshc,
+                            type = "hierarchical",
+                            k = 3L,
+                            preproc = zscore,
+                            distance = "dtw_basic",
+                            control = hierarchical_control(method = "average"),
+                            args = tsclust_args(dist = list(window.size = 78L), cent = dba)
+)
+
+#extract data on clusters and their prototypes
+hc_members <- as.data.frame((ggplot_build(plot(dtw_hc, type = "series", clus = c(1L:4L)))[["data"]]))
+hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus = c(1L:4L)))[["data"]]))
+
+#plot ggdendrogram to show hierarchical clustering
+labs <- label(dendro_data(as.dendrogram(dtw_hc)))
+labs$Cluster <- c(rep("3", 2), rep("2", 2), rep("1", 23))
+
+S3 <-
+  ggdendro::ggdendrogram(dtw_hc) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  labs(title = "(D)", x = "Time series hierarchical clustering", y = "Height") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  geom_point(data = labs, aes(x = x, y = 0, colour = Cluster), size = 4) +
+  theme(legend.position = c(0.7,0.85))
+
+#plot prototypes
+S4 <-
+  dplyr::rows_append(
+    hc_members %>%
+      dplyr::mutate(cat = "Cluster members") %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL"),
+    
+    hc_centroid %>% 
+      dplyr::mutate(cat = "Prototypes", "group" = NA) %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL")) %>%
+  
+  mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
+                           if_else(Cluster == 2, "Cluster 2", 
+                                   if_else(Cluster == 3, "Cluster 3", NA_character_)))) %>%
+  
+  ggplot() +
+  geom_line(aes(x = x, y = y, color = colour), size = 2) +
+  facet_grid(cat ~ Cluster) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank()) + 
+  theme(strip.text.y = element_text(size = 18), strip.text.x = element_text(size = 18), strip.background = element_rect(fill="white")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  labs(x = "Weeks since COVID-19 pandemic onset", y = "z-normalised", title = "(E)")
+
+ggsave(here("output", "sfig8_dtwClustering.png"), 
+       plot = A | (S1/S2) | (S3/S4),
+       width = 23, height = 15, unit="in", dpi = 300)
 

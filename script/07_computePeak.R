@@ -138,4 +138,4 @@ rsv_peak2 <-
 #====================================================================
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak1|rsv_peak2|X|rsv_ts|stringency", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak1|rsv_peak2|X|rsv_ts|stringency|A|B|C|D", ls(), value = TRUE, invert = TRUE))

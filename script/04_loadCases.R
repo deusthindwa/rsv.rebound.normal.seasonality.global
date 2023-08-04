@@ -659,14 +659,6 @@ rm(list = grep("rsv_all", ls(), value = TRUE, invert = TRUE))
 climate <-
   rio::import(here::here("data", "climate", "climate.csv"))
 
-#====================================================================
-#LIMIT CASE DATE TO AVOID EFFECTS OF RAPID DROP OFF
-#====================================================================
-
-rsv_all <-
-rsv_all %>%
-  dplyr::filter(date <= date("2023-02-28"))
-
 #================================================================
 # DOWNLOAD AND BUILD A STRINGENCY DATASET
 #================================================================
@@ -687,3 +679,31 @@ stringency <-
   dplyr::filter(country == "Scotland") %>%
   dplyr::mutate(country = ifelse(country == "Scotland", "Northern Ireland", country)) %>%
   dplyr::bind_rows(stringency)
+
+#====================================================================
+#SET PROPER DATA BOUNDARIES FOR ANALYSIS
+#====================================================================
+
+#set southern hemisphere countries to start from 1st week of 2017 to 52th week of 2022
+rsv_allSo <-
+rsv_all %>%
+  dplyr::filter(country %in% c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa") &
+                  date >= date("2017-01-08") &
+                  date <= date("2022-12-31")
+                )
+
+#set northern hemisphere countries to start from 24th week of 2017 to 23rd week of 2023
+rsv_allNo <-
+  rsv_all %>%
+  dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") &
+                  date >= date("2017-06-11") &
+                  date < date("2023-06-04")
+  )
+
+#now combine the datasets
+rsv_all <-
+bind_rows(rsv_allSo, rsv_allNo)
+
+# rsv_all <-
+#   rsv_all %>%
+#   dplyr::filter(date <= date("2023-02-28"))

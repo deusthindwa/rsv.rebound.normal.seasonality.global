@@ -151,4 +151,4 @@ rsv_growth2 <-
   dplyr::left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct(.keep_all = TRUE)) %>%
   dplyr::select(everything(), -covper2)
 
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|stringency", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|rsv_growth|stringency|A|B", ls(), value = TRUE, invert = TRUE))
