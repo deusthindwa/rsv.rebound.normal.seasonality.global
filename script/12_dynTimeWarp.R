@@ -18,8 +18,8 @@ X <-
       rsv_all %>%
       dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") &
                       date >= date("2020-06-11") &
-                      date < date("2023-06-04"))
-  ) %>%
+                      date < date("2023-06-04"))) %>%
+  
   arrange(country, date) %>%
   group_by(country) %>%
   dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n())) %>%
