@@ -61,8 +61,8 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
         dplyr::filter(!is.na(y2022))) %>%
     dplyr::filter(!is.na(precov), !is.na(y2021), !is.na(y2022)) %>%
   
-   dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)*100),
-                 corr2022 = abs(round(stats::cor(y2022, precov), digits = 3)*100))
+   dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)),
+                 corr2022 = abs(round(stats::cor(y2022, precov), digits = 3)))
 }
 
 hemiX <- dplyr::bind_rows(scatterXY, .id = "id")
@@ -95,8 +95,8 @@ normX =
       dplyr::filter(!is.na(y2022))) %>%
   dplyr::filter(!is.na(precov), !is.na(y2021), !is.na(y2022)) %>%
   
-  dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)*100),
-                corr2022 = abs(round(stats::cor(y2022, precov), digits = 3)*100)) %>% 
+  dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)),
+                corr2022 = abs(round(stats::cor(y2022, precov), digits = 3))) %>% 
   
   dplyr::mutate(id = "All countries") %>%
   dplyr::select(id, country, everything())
@@ -106,11 +106,10 @@ normX =
 
 C1 <-
   dplyr::bind_rows(hemiX, normX) %>%
-  
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   scale_y_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
@@ -127,13 +126,14 @@ C2 <-
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   scale_y_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "PreCOVID-19 (2017-19) mean estimate", y = "2nd RSV wave after COVID-19 suppression", title ="") +
   scale_shape_manual(values = c(18, 4)) +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)
@@ -176,8 +176,8 @@ for (i in c("Temperate", "Sub-tropical", "Tropical")) {
         dplyr::filter(!is.na(y2022))) %>%
     dplyr::filter(!is.na(precov), !is.na(y2021), !is.na(y2022)) %>%
     
-    dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)*100),
-                  corr2022 = abs(round(stats::cor(y2022, precov), digits = 3)*100))
+    dplyr::mutate(corr2021 = abs(round(stats::cor(y2021, precov), digits = 3)),
+                  corr2022 = abs(round(stats::cor(y2022, precov), digits = 3)))
 }
 
 climX <- dplyr::bind_rows(scatterXY, .id = "id")
@@ -187,11 +187,10 @@ climX <- dplyr::bind_rows(scatterXY, .id = "id")
 
 C3 <-
   dplyr::bind_rows(climX) %>%
-  
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   scale_y_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
@@ -204,17 +203,17 @@ C3 <-
 
 C4 <-
   dplyr::bind_rows(climX) %>%
-  
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.1, y = 0.2, label = paste0("r = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   scale_y_continuous(breaks = seq(0, 1.2, 0.2), limits = c(0, 1.3)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "PreCOVID-19 (2017-19) mean estimate", y = "2nd RSV wave after COVID-19 suppression", title ="") +
   scale_shape_manual(values = c(18, 4)) +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)

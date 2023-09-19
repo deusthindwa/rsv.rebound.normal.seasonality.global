@@ -40,32 +40,26 @@ climate <-
 #time to first onset in 2021 from 2020 COVID-19 suppression in July
 DSonset1 <-
 rsv_onset %>%
-  dplyr::select(country, covper, epiwk, clim_zone, hemi, region) %>%
+  dplyr::select(country, covper, epiwk, clim_zone, hemi) %>%
   dplyr::left_join(climate) %>%
   dplyr::filter(covper == "y2021") %>%
   dplyr::mutate(covper = str_sub(covper, 2, 5),
                 epiwk = round(epiwk, digits = 0),
                 onset = as.Date(paste(covper, epiwk, 1, sep="-"), "%Y-%W-%u"),
                 onset = as.integer(difftime(onset, as.Date("2020-07-01"), units = "weeks")),
-                region = ifelse(region == "Africa", "Africa & SEA",
-                                ifelse(region == "South East Asia", "Africa & SEA", region)),
-                region = ifelse(region == "Europe", " Europe", region),
-                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-                latitude = ifelse(latitude == "00-C", "15-S",
-                                  ifelse(latitude == "30-S", "45-S",
-                                         ifelse(latitude == "15-N", "30-N", latitude)))) %>%
-  dplyr::select(country, onset, clim_zone, hemi, region, latitude, out_seas21) %>%
+                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
+  dplyr::select(country, onset, clim_zone, hemi, out_seas21) %>%
   dplyr::filter(clim_zone != "")
 
 DSonset1 <-
   DSonset1 %>% 
   dplyr::filter(!is.na(onset)) %>%
-  dplyr::arrange(country, clim_zone, hemi, region, latitude, out_seas21) %>%
+  dplyr::arrange(country, clim_zone, hemi, out_seas21) %>%
   utils::type.convert(as.is = TRUE) %>% 
   tidyr::uncount(onset) %>%
   dplyr::group_by(country) %>%
   dplyr::mutate(time = seq.int(from = 1, by = 1, length.out = n()),
-                fdate = seq(as.Date("2020-07-01"), by = "weeks", length.out = n())) %>%
+                fdate = seq(as.Date("2020-07-13"), by = "weeks", length.out = n())) %>% #fix date here to match number of onset weeks
   dplyr::ungroup() %>%
   dplyr::select(country, time, fdate, everything())
 
@@ -87,7 +81,7 @@ DSonset1 %>%
 #time to second onset post-COVID-19 from 2021 COVID-19 suppression
 DSonset2 <- 
   rsv_onset %>%
-  dplyr::select(country, covper, epiwk, clim_zone, hemi, region) %>%
+  dplyr::select(country, covper, epiwk, clim_zone, hemi) %>%
   dplyr::left_join(climate) %>%
   dplyr::filter(covper != "precov") %>%
   pivot_wider(names_from = covper, values_from = epiwk) %>%
@@ -96,25 +90,20 @@ DSonset2 <-
                 y2021 = as.Date(paste("2021", y2021, 1, sep="-"), "%Y-%W-%u"),
                 y2022 = as.Date(paste("2022", y2022, 1, sep="-"), "%Y-%W-%u"),
                 onset = as.integer(difftime(y2022, y2021, units = "weeks")),
-                region = ifelse(region == "Africa", "Africa & SEA",
-                                ifelse(region == "South East Asia", "Africa & SEA", 
-                                       ifelse(region == "Europe", " Europe", region))),
-                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-                latitude = ifelse(latitude == "00-C", "15-S",
-                                  ifelse(latitude == "30-S", "45-S",
-                                         ifelse(latitude == "15-N", "30-N", latitude)))) %>%
-  dplyr::select(country, onset, clim_zone, hemi, region, latitude, out_seas21, y2021) %>%
+                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
+  dplyr::select(country, onset, clim_zone, hemi, out_seas21, y2021) %>%
   dplyr::filter(clim_zone != "")
 
 DSonset2 <-
   DSonset2 %>% 
   dplyr::filter(!is.na(onset)) %>%
-  dplyr::arrange(country, clim_zone, hemi, region, latitude, out_seas21) %>%
+  dplyr::arrange(country, clim_zone, hemi, out_seas21) %>%
   utils::type.convert(as.is = TRUE) %>% 
   tidyr::uncount(onset) %>%
   dplyr::group_by(country) %>%
   dplyr::mutate(time = seq.int(from = 1, by = 1, length.out = n()),
-                y2021 = date(ifelse(time == 1, y2021, NA_Date_)),
+                y2021 = ymd(date(y2021)),
+                y2021 = if_else(time == 1, y2021 %m+% period("1 week"), NA_Date_),
                 fdate = seq((y2021[1]), length.out = n(), by = "weeks")) %>%
   dplyr::ungroup() %>%
   dplyr::select(country, time, fdate, everything(), -y2021)
@@ -137,32 +126,26 @@ DSonset2 <-
 #time to first onset in 2021 from 2020 COVID-19 suppression in July
 DSpeak1 <-
   rsv_peak2 %>%
-  dplyr::select(country, covper, difloc, clim_zone, hemi, region) %>%
+  dplyr::select(country, covper, difloc, clim_zone, hemi) %>%
   dplyr::left_join(climate) %>%
   dplyr::filter(covper == "y2021") %>%
   dplyr::mutate(covper = str_sub(covper, 2, 5),
                 difloc = round(difloc, digits = 0),
                 peak = as.Date(paste(covper, difloc, 1, sep="-"), "%Y-%W-%u"),
                 peak = as.integer(difftime(peak, as.Date("2020-07-01"), units = "weeks")),
-                region = ifelse(region == "Africa", "Africa & SEA",
-                                ifelse(region == "South East Asia", "Africa & SEA", region)),
-                region = ifelse(region == "Europe", " Europe", region),
-                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-                latitude = ifelse(latitude == "00-C", "15-S",
-                                  ifelse(latitude == "30-S", "45-S",
-                                         ifelse(latitude == "15-N", "30-N", latitude)))) %>%
-  dplyr::select(country, peak, clim_zone, hemi, region, latitude, out_seas21) %>%
+                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
+  dplyr::select(country, peak, clim_zone, hemi, out_seas21) %>%
   dplyr::filter(clim_zone != "")
 
 DSpeak1 <-
   DSpeak1 %>% 
   dplyr::filter(!is.na(peak)) %>%
-  dplyr::arrange(country, clim_zone, hemi, region, latitude, out_seas21) %>%
+  dplyr::arrange(country, clim_zone, hemi, out_seas21) %>%
   utils::type.convert(as.is = TRUE) %>% 
   tidyr::uncount(peak) %>%
   dplyr::group_by(country) %>%
   dplyr::mutate(time = seq.int(from = 1, by = 1, length.out = n()),
-                fdate = seq(as.Date("2020-07-01"), by = "weeks", length.out = n())) %>%
+                fdate = seq(as.Date("2020-07-13"), by = "weeks", length.out = n())) %>%
   dplyr::ungroup() %>%
   dplyr::select(country, time, fdate, everything())
 
@@ -184,7 +167,7 @@ DSpeak1 <-
 #time to second onset post-COVID-19 from 2021 COVID-19 suppression
 DSpeak2 <- 
   rsv_peak2 %>%
-  dplyr::select(country, covper, difloc, clim_zone, hemi, region) %>%
+  dplyr::select(country, covper, difloc, clim_zone, hemi) %>%
   dplyr::left_join(climate) %>%
   dplyr::filter(covper != "precov") %>%
   pivot_wider(names_from = covper, values_from = difloc) %>%
@@ -193,25 +176,20 @@ DSpeak2 <-
                 y2021 = as.Date(paste("2021", y2021, 1, sep="-"), "%Y-%W-%u"),
                 y2022 = as.Date(paste("2022", y2022, 1, sep="-"), "%Y-%W-%u"),
                 peak = as.integer(difftime(y2022, y2021, units = "weeks")),
-                region = ifelse(region == "Africa", "Africa & SEA",
-                                ifelse(region == "South East Asia", "Africa & SEA", 
-                                       ifelse(region == "Europe", " Europe", region))),
-                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-                latitude = ifelse(latitude == "00-C", "15-S",
-                                  ifelse(latitude == "30-S", "45-S",
-                                         ifelse(latitude == "15-N", "30-N", latitude)))) %>%
-  dplyr::select(country, peak, clim_zone, hemi, region, latitude, out_seas21, y2021) %>%
+                clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
+  dplyr::select(country, peak, clim_zone, hemi, out_seas21, y2021) %>%
   dplyr::filter(clim_zone != "")
 
 DSpeak2 <-
   DSpeak2 %>% 
   dplyr::filter(!is.na(peak)) %>%
-  dplyr::arrange(country, clim_zone, hemi, region, latitude, out_seas21) %>%
+  dplyr::arrange(country, clim_zone, hemi, out_seas21) %>%
   utils::type.convert(as.is = TRUE) %>% 
   tidyr::uncount(peak) %>%
   dplyr::group_by(country) %>%
   dplyr::mutate(time = seq.int(from = 1, by = 1, length.out = n()),
-                y2021 = date(ifelse(time == 1, y2021, NA_Date_)),
+                y2021 = ymd(date(y2021)),
+                y2021 = if_else(time == 1, y2021 %m+% period("1 week"), NA_Date_),
                 fdate = seq((y2021[1]), length.out = n(), by = "weeks")) %>%
   dplyr::ungroup() %>%
   dplyr::select(country, time, fdate, everything(), -y2021)
@@ -235,17 +213,11 @@ DSpeak2 <-
 DSgrowth1 <-
   rsv_growth2 %>%
   dplyr::filter(covper == "y2021") %>%
-  left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct()) %>%
+  left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>%
   left_join(climate) %>%
-  mutate(region = ifelse(region == "Africa", "Africa & SEA",
-                         ifelse(region == "South East Asia", "Africa & SEA", region)),
-         region = ifelse(region == "Europe", " Europe", region),
-         clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-         latitude = ifelse(latitude == "00-C", "15-S",
-                           ifelse(latitude == "30-S", "45-S",
-                                  ifelse(latitude == "15-N", "30-N", latitude)))) %>%
+  mutate(clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
   dplyr::filter(clim_zone != "") %>%
-  dplyr::select(everything(), -covper, -wk_scale)
+  dplyr::select(everything(), -covper, -wk_scale, -region, -latitude)
 
 #combine stringency and onset datasets
 DSgrowth1 <-
@@ -253,9 +225,9 @@ DSgrowth1 <-
   left_join(
     stringency %>%
       group_by(country) %>%
-      summarise(strin_indx = mean(strin_indx),
-                pop_dens = mean(pop_dens),
-                med_age = mean(med_age)) %>%
+      summarise(strin_indx = median(strin_indx),
+                pop_dens = median(pop_dens),
+                med_age = median(med_age)) %>%
       ungroup()
   )
 
@@ -267,17 +239,11 @@ DSgrowth1 <-
 DSgrowth2 <-
   rsv_growth2 %>%
   dplyr::filter(covper == "y2022") %>%
-  left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct()) %>%
+  left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>%
   left_join(climate) %>%
-  mutate(region = ifelse(region == "Africa", "Africa & SEA",
-                         ifelse(region == "South East Asia", "Africa & SEA", region)),
-         region = ifelse(region == "Europe", " Europe", region),
-         clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-         latitude = ifelse(latitude == "00-C", "15-S",
-                           ifelse(latitude == "30-S", "45-S",
-                                  ifelse(latitude == "15-N", "30-N", latitude)))) %>%
+  mutate(clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
   dplyr::filter(clim_zone != "") %>%
-  dplyr::select(everything(), -covper, -wk_scale)
+  dplyr::select(everything(), -covper, -wk_scale, -region, -latitude)
 
 #combine stringency and onset datasets
 DSgrowth2 <-
@@ -285,9 +251,9 @@ DSgrowth2 <-
   left_join(
     stringency %>%
       group_by(country) %>%
-      summarise(strin_indx = mean(strin_indx),
-                pop_dens = mean(pop_dens),
-                med_age = mean(med_age)) %>%
+      summarise(strin_indx = median(strin_indx),
+                pop_dens = median(pop_dens),
+                med_age = median(med_age)) %>%
       ungroup()
   )
 
@@ -299,17 +265,11 @@ DSgrowth2 <-
 DSintens1 <-
   rsv_intens2 %>%
   dplyr::filter(covper == "y2021") %>%
-  left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct()) %>%
+  left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>%
   left_join(climate) %>%
-  mutate(region = ifelse(region == "Africa", "Africa & SEA",
-                         ifelse(region == "South East Asia", "Africa & SEA", region)),
-         region = ifelse(region == "Europe", " Europe", region),
-         clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-         latitude = ifelse(latitude == "00-C", "15-S",
-                           ifelse(latitude == "30-S", "45-S",
-                                  ifelse(latitude == "15-N", "30-N", latitude)))) %>%
+  mutate(clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
   dplyr::filter(clim_zone != "") %>%
-  dplyr::select(everything(), -covper, -wk_scale)
+  dplyr::select(everything(), -covper, -wk_scale, -region, -latitude)
 
 #combine stringency and onset datasets
 DSintens1 <-
@@ -317,9 +277,9 @@ DSintens1 <-
   left_join(
     stringency %>%
       group_by(country) %>%
-      summarise(strin_indx = mean(strin_indx),
-                pop_dens = mean(pop_dens),
-                med_age = mean(med_age)) %>%
+      summarise(strin_indx = median(strin_indx),
+                pop_dens = median(pop_dens),
+                med_age = median(med_age)) %>%
       ungroup()
   )
 
@@ -331,17 +291,11 @@ DSintens1 <-
 DSintens2 <-
   rsv_intens2 %>%
   dplyr::filter(covper == "y2022") %>%
-  left_join(rsv_all %>% dplyr::select(country, hemi, region) %>% distinct()) %>%
+  left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>%
   left_join(climate) %>%
-  mutate(region = ifelse(region == "Africa", "Africa & SEA",
-                         ifelse(region == "South East Asia", "Africa & SEA", region)),
-         region = ifelse(region == "Europe", " Europe", region),
-         clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone),
-         latitude = ifelse(latitude == "00-C", "15-S",
-                           ifelse(latitude == "30-S", "45-S",
-                                  ifelse(latitude == "15-N", "30-N", latitude)))) %>%
+  mutate(clim_zone = ifelse(clim_zone == "Temperate", " Temperate", clim_zone)) %>%
   dplyr::filter(clim_zone != "") %>%
-  dplyr::select(everything(), -covper, -wk_scale)
+  dplyr::select(everything(), -covper, -wk_scale, -region, -latitude)
 
 #combine stringency and onset datasets
 DSintens2 <-
@@ -349,9 +303,9 @@ DSintens2 <-
   left_join(
     stringency %>%
       group_by(country) %>%
-      summarise(strin_indx = mean(strin_indx),
-                pop_dens = mean(pop_dens),
-                med_age = mean(med_age)) %>%
+      summarise(strin_indx = median(strin_indx),
+                pop_dens = median(pop_dens),
+                med_age = median(med_age)) %>%
       ungroup()
   )
 
@@ -359,9 +313,17 @@ DSintens2 <-
 # ADD MISCELLENEOUS VARIABLES
 #================================================================
 
-#Does intensity in 2021 influence intensity in 2022 
-DSintens2 <- 
-  DSintens2 %>% 
+#Does intensity in 2021 influence onset in 2022 
+DSonset2 <- 
+  DSonset2 %>% 
+  dplyr::left_join(
+    DSintens1 %>%
+      dplyr::select(country, intensity) %>%
+      dplyr::rename("intens2021" = "intensity"))
+
+#Does intensity in 2021 influence peak in 2022 
+DSpeak2 <- 
+  DSpeak2 %>% 
   dplyr::left_join(
     DSintens1 %>%
       dplyr::select(country, intensity) %>%
@@ -375,17 +337,9 @@ DSgrowth2 <-
       dplyr::select(country, intensity) %>%
       dplyr::rename("intens2021" = "intensity"))
 
-#Does intensity in 2021 influence onset in 2022 
-DSonset2 <- 
-  DSonset2 %>% 
-  dplyr::left_join(
-    DSintens1 %>%
-      dplyr::select(country, intensity) %>%
-      dplyr::rename("intens2021" = "intensity"))
-
-#Does intensity in 2021 influence peak in 2022 
-DSpeak2 <- 
-  DSpeak2 %>% 
+#Does intensity in 2021 influence intensity in 2022
+DSintens2 <- 
+  DSintens2 %>% 
   dplyr::left_join(
     DSintens1 %>%
       dplyr::select(country, intensity) %>%

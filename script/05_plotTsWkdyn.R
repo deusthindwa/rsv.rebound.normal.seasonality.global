@@ -8,7 +8,7 @@
 
 #RSV time series dynamics dataset
 country_ts <-
-  rsv_all %>%
+  rsv_dtw %>%
   dplyr::group_by(country, date, wk) %>%
   dplyr::summarise(cases = mean(cases, na.rm = TRUE)) %>%
   dplyr::ungroup() %>%
@@ -18,46 +18,21 @@ country_ts <-
 
 #create empty lists
 X <- list()
-Y <- list()
 
-#time series dynamics for sub/tropical countries
-for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa")) {
-X 
+#time series dynamics for all included countries
+for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa",
+            "Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) {
+
   X[[i]] <-    
-  country_ts %>%
-    dplyr::filter(country == i) %>%
-    dplyr::mutate(newDate = max(date, na.rm = TRUE),
-                  newCases = cases[which.max(date == newDate)])
-}
-
-#time series dynamics for temperate countries
-for (i in c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) {
-  
-  Y[[i]] <-
     country_ts %>%
     dplyr::filter(country == i) %>%
-    dplyr::mutate(newDate = max(date, na.rm = TRUE), 
-                  newCases = cases[which.max(date == newDate)])
+    dplyr::mutate(newDate = max(date, na.rm = TRUE),
+                  newCases = cases[which.max(date == newDate)],
+                  hemi = "Southern Hemisphere")
 }
 
-#time series plots
 A <-
-  bind_rows(Y) %>%
-  ggplot(aes(x = date, y = cases)) +
-  geom_line(size = 1.2) + 
-  geom_point(aes(x = newDate, y = newCases), color = "red", size = 2.5) +
-  theme_bw(base_size = 11, base_family = "Lato", base_line_size = 1.5) + 
-  labs(title = "", x = "Reporting date", y = "RSV cases (2-weeks moving average)") +
-  guides(color = guide_legend(title = "")) +
-  scale_x_date(date_labels = "%b %y", date_breaks = "1 year") +
-  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
-  facet_wrap(.~ country, ncol = 5, scales = "free_y") +
-  theme_bw(base_size = 15, base_family = 'Lato') +
-  theme(axis.text.x = element_text(angle = 30, vjust = 0.5, hjust = 0.3)) +
-  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
-
-B <-
-  bind_rows(X) %>%
+bind_rows(X) %>%
   ggplot(aes(x = date, y = cases)) +
   geom_line(size = 1.2) + 
   geom_point(aes(x = newDate, y = newCases), color = "red", size = 2.5) +
@@ -66,15 +41,17 @@ B <-
   guides(color = guide_legend(title = "")) +
   scale_x_date(date_labels = "%b %y", date_breaks = "1 year") +
   scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
-  facet_wrap(.~ country, ncol = 2, scales = "free_y") +
+  facet_wrap(.~ country, ncol = 4, scales = "free_y") +
   theme_bw(base_size = 15, base_family = 'Lato') +
   theme(axis.text.x = element_text(angle = 30, vjust = 0.5, hjust = 0.3)) +
-  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
+  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  
 
 #combined plots and saving
 ggsave(here("output", "fig2_tsdyn.png"),
-       plot = (A | B | plot_layout(ncol = 2, width = c(2.3, 1))),
-       width = 25, height = 13, unit="in", dpi = 300)
+       plot = (A),
+       width = 20, height = 17, unit="in", dpi = 300)
 
 #====================================================================
 #WEEKLY DYNAMICS OF RSV
@@ -82,7 +59,7 @@ ggsave(here("output", "fig2_tsdyn.png"),
 
 #weekly dynamics dataset
 rsv_weekly <-
-  rsv_all %>%
+  rsv_dtw %>%
   dplyr::filter(country %in% c("Argentina", "Australia", "Brazil", "Canada", "Colombia", "Costa Rica", "Denmark", "France", "Germany", "Hungary", "Iceland", "India", "Ireland", "Japan",
                                "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Paraguay", "Peru", "Portugal", "Qatar", "Scotland", "South Africa", "Spain", "Sweden", "United States")) %>%
   dplyr::left_join(climate)
@@ -135,6 +112,7 @@ for (i in c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Icel
                                    wk %in% wkno1 & yr == 2022 ~ "2021/22",
                                    wk %in% wkno2 & yr == 2022 ~ "2022/23",
                                    wk %in% wkno1 & yr == 2023 ~ "2022/23",
+                                   wk %in% wkno2 & yr == 2024 ~ "2023/24",
                                    TRUE ~ NA_character_)) %>%
     dplyr::ungroup() %>%
     
@@ -158,7 +136,7 @@ for (i in c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Icel
 }
 
 #weekly plots
-C <-
+B <-
   bind_rows(Y) %>%
   ggplot(aes(x = wk, y = cases, group = covid, color = covid)) +
   geom_line(size = 1.5) +
@@ -171,9 +149,10 @@ C <-
   facet_wrap(.~ country, ncol = 5, scales = "free_y") +
   theme_bw(base_size = 15, base_family = 'Lato') +
   theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.3)) +
-  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
+  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16)) + 
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
-D <-
+C <-
   bind_rows(X) %>%
   ggplot(aes(x = wk, y = cases, color = covid)) +
   geom_line(size = 1.5) + 
@@ -185,14 +164,15 @@ D <-
   facet_wrap(.~ country, ncol = 2, scales = "free_y") +
   theme_bw(base_size = 15, base_family = 'Lato') +
   theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.3)) +
-  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16))
+  theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16)) + 
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #combined plots and saving
 ggsave(here("output", "sfig1_wkdyn.png"),
-       plot = (C | D | plot_layout(ncol = 2, width = c(2.3, 1))),
+       plot = (B | C | plot_layout(ncol = 2, width = c(2.3, 1))),
        width = 25, height = 13, unit="in", dpi = 300)
 
 #====================================================================
 
 #delete all temporary datasets
-rm(list = grep("rsv_all|climate|stringency", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|rsv_dtw|climate|stringency", ls(), value = TRUE, invert = TRUE))

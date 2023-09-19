@@ -157,8 +157,8 @@ normX =
          y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
          y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
   
-  dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0)))
+  dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3)))
 
 #====================================================================
 #RSV ONSET BY HEMISPHERE
@@ -201,8 +201,8 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
            y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
            y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
     
-    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0)))
+    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3)))
   
 }
 
@@ -213,13 +213,11 @@ hemiX <- bind_rows(scatterXY, .id = "id")
 
 A1 <-
   dplyr::bind_rows(hemiX, normX) %>%
-  dplyr::mutate(precov = round(precov, digits = 0), y2021 = round(y2021, digits = 0)) %>%
-
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk2, ymax = uwk2), width = 0, size = 1, position = position_dodge(width = 0.5)) + 
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
@@ -231,18 +229,17 @@ A1 <-
 
 A2 <-
   dplyr::bind_rows(hemiX, normX) %>%
-  dplyr::mutate(precov = round(precov, digits = 0), y2022 = round(y2022, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk3, ymax = uwk3), width = 0, size = 1, position = position_dodge(width = 0.5)) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "2nd RSV wave after COVID-19 suppression", title ="") +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)
@@ -293,8 +290,8 @@ for (i in c("Temperate", "Sub-tropical", "Tropical")) {
            y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
            y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
     
-    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0)))
+    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3)))
 }
 
 climX <- bind_rows(scatterXY, .id = "id")
@@ -304,13 +301,11 @@ climX <- bind_rows(scatterXY, .id = "id")
 
 A3 <-
   dplyr::bind_rows(climX) %>%
-  dplyr::mutate(precov = round(precov, digits = 0), y2021 = round(y2021, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk2, ymax = uwk2), width = 0, size = 1, position = position_dodge(width = 0.5)) + 
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
@@ -322,18 +317,17 @@ A3 <-
 
 A4 <-
   dplyr::bind_rows(climX) %>%
-  dplyr::mutate(precov = round(precov, digits = 0), y2022 = round(y2022, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk3, ymax = uwk3), width = 0, size = 1, position = position_dodge(width = 0.5)) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "2nd RSV wave after COVID-19 suppression", title ="") +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)

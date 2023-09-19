@@ -60,8 +60,8 @@ normX =
          y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
          y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
   
-  dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0))) %>% 
+  dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3))) %>% 
   
   dplyr::mutate(id = "All countries") %>%
   dplyr::select(id, country, everything())
@@ -106,8 +106,8 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
            y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
            y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
     
-    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0)))
+    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3)))
 }
 
 hemiX <- dplyr::bind_rows(scatterXY, .id = "id")
@@ -119,19 +119,17 @@ B1 <-
   dplyr::bind_rows(hemiX, normX) %>%
   dplyr::mutate(lwk3 = ifelse(country == "Canada" | country == "Sweden", 1, lwk3), #resolve circular problem in plotting
                 lwk2 = ifelse(country == "Hungary", 1, lwk2)) %>% #where weeks overlap between old and new years
-  dplyr::mutate(precov = round(precov, digits = 0), y2021 = round(y2021, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk2, ymax = uwk2), width = 0, size = 1, position = position_dodge(width = 0.5)) + 
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "", title = "(B) RSV PEAK TIMING") +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  theme(legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 14)) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -139,18 +137,17 @@ B2 <-
   dplyr::bind_rows(hemiX, normX) %>%
   dplyr::mutate(lwk3 = ifelse(country == "Canada" | country == "Sweden", 1, lwk3),
                 lwk2 = ifelse(country == "Hungary", 1, lwk2)) %>% #resolve circular ploem in plotting where weeks overlap between old and new years
-  dplyr::mutate(precov = round(precov, digits = 0), y2022 = round(y2022, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk3, ymax = uwk3), width = 0, size = 1, position = position_dodge(width = 0.5)) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "", title ="") +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)
@@ -201,8 +198,8 @@ for (i in c("Temperate", "Sub-tropical", "Tropical")) {
            y2021x =  circular(y2021, units = "degrees", template = "geographics", modulo = "2pi"),
            y2022x = circular(y2022, units = "degrees", template = "geographics", modulo = "2pi")) %>% 
     
-    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1])*100, digits = 0)),
-                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1]*100, digits = 0)))
+    dplyr::mutate(corr2021 = abs(round(((cor.circular(precovx, y2021x))[1]), digits = 3)),
+                  corr2022 = abs(round((cor.circular(precovx, y2022x))[1], digits = 3)))
 }
 
 climX <- dplyr::bind_rows(scatterXY, .id = "id")
@@ -214,13 +211,11 @@ B3 <-
   dplyr::bind_rows(climX) %>%
   dplyr::mutate(lwk3 = ifelse(country == "Canada" | country == "Sweden", 1, lwk3), #resolve circular problem in plotting
                 lwk2 = ifelse(country == "Hungary", 1, lwk2)) %>% #where weeks overlap between old and new years
-  dplyr::mutate(precov = round(precov, digits = 0), y2021 = round(y2021, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2021, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk2, ymax = uwk2), width = 0, size = 1, position = position_dodge(width = 0.5)) + 
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2021, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2021)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
@@ -234,18 +229,17 @@ B4 <-
   dplyr::bind_rows(climX) %>%
   dplyr::mutate(lwk3 = ifelse(country == "Canada" | country == "Sweden", 1, lwk3),
                 lwk2 = ifelse(country == "Hungary", 1, lwk2)) %>% #resolve circular ploem in plotting where weeks overlap between old and new years
-  dplyr::mutate(precov = round(precov, digits = 0), y2022 = round(y2022, digits = 0)) %>%
-  
   ggplot(aes(x = precov, y = y2022, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   #geom_errorbar(aes(ymin = lwk3, ymax = uwk3), width = 0, size = 1, position = position_dodge(width = 0.5)) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 45, y = 5, label = paste0("c = ", corr2022, "%")), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 5, label = paste0("c = ", corr2022)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ id) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1, 52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "", title ="") +
+  theme(axis.text.x = element_text(size = 12)) + 
   theme(legend.position = "none", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   guides(shape = FALSE)
