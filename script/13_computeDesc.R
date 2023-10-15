@@ -196,3 +196,126 @@ rsv_descp %>%
 ggsave(here("output", "sfig7_pred_destribution.png"),
        plot = (D1 | D3 | D5)/(D2 | D4 | D6),
        width = 20, height = 14, unit="in", dpi = 300)
+
+#====================================================================
+#====================================================================
+
+#load cluster dataset
+rsv_cluster <- import(here("data", "cluster.xlsx"))
+
+#combine cluster dataset with onset dataset
+A <-
+rsv_onset %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::group_by(cluster, covper) %>%
+  dplyr::mutate(avg_onset = median(epiwk)) %>%
+  dplyr::ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = avg_onset, color = covper), size = 3, shape = 1, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with peak timing dataset
+B <-
+rsv_peak2 %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::group_by(cluster, covper) %>%
+  dplyr::mutate(avg_peak = median(difloc)) %>%
+  dplyr::ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = avg_peak, color = covper), size = 3, shape = 2, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with intensity dataset
+C <-
+rsv_intens2 %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::group_by(cluster, covper) %>%
+  dplyr::mutate(avg_intensity = median(intensity)) %>%
+  dplyr::ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = avg_intensity, color = covper), size = 3, shape = 5, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with growth rate dataset
+D <-
+rsv_growth2%>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::group_by(cluster, covper) %>%
+  dplyr::mutate(avg_growth = median(pks),
+                covper = if_else(covper == "y2021", "first wave",
+                                 if_else(covper == "y2022", "second wave", NA_character_))) %>%
+  dplyr::ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = avg_growth, color = covper), size = 3, shape = 0, stroke = 2) +
+  theme_bw(base_size = 18, base_family = 'Lato')
+
+A|B|C|D
+
+
+#====================================================================
+#====================================================================
+
+#load cluster dataset
+rsv_cluster <- import(here("data", "cluster.xlsx"))
+
+#combine cluster dataset with onset dataset
+A <-
+  rsv_onset %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::rename("Onset" = "epiwk") %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = Onset, color = covper), size = 3, shape = 1, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with peak timing dataset
+B <-
+  rsv_peak2 %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::rename("Peak" = "difloc") %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = Peak, color = covper), size = 3, shape = 2, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with intensity dataset
+C <-
+  rsv_intens2 %>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::rename("Intensity" = "intensity") %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = Intensity, color = covper), size = 3, shape = 5, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank())
+
+#combine cluster dataset with growth rate dataset
+D <-
+  rsv_growth2%>%
+  left_join(rsv_cluster) %>%
+  dplyr::filter(covper != "precov") %>%
+  dplyr::mutate(covper = if_else(covper == "y2021", "first wave",
+                                 if_else(covper == "y2022", "second wave", NA_character_))) %>%
+  dplyr::rename("Growth" = "pks") %>%
+  ggplot() +
+  geom_point(aes(x = cluster, y = Growth, color = covper), size = 3, shape = 0, stroke = 2) +
+  xlim(1,4) +
+  theme_bw(base_size = 18, base_family = 'Lato')
+
+A|B|C|D
+

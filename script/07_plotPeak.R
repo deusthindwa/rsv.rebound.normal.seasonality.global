@@ -249,4 +249,4 @@ B4 <-
 
 
 #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|stringency|A|B|C|D", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|rsv_peak|stringency|rsv_dtw|A|B|C|D", ls(), value = TRUE, invert = TRUE))

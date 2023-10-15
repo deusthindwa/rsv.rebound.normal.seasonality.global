@@ -336,5 +336,5 @@ A4 <-
 #====================================================================
 
 # #delete unnecessary files
-rm(list = grep("rsv_all|climate|rsv_onset|stringency|A|B|C|D", ls(), value = TRUE, invert = TRUE))
+rm(list = grep("rsv_all|climate|rsv_onset|stringency|rsv_dtw|A|B|C|D", ls(), value = TRUE, invert = TRUE))
 rm("rsv_onset1", "rsv_onset2")

@@ -60,6 +60,40 @@ Modonset2 = coxph(Surv(time, event) ~ out_seas212 + med_age2 + intens20212 + hem
 tidy(Modonset2, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
 
 #================================================================
+# REGRESSION ANALYSIS OF ONSET 2022 (FROM COVID-19 SUPPRESSION)
+#================================================================
+
+#fit the models iteratively & store model fitted values
+for (i in c("hemi2", "clim_zone2", "pop_dens2", "med_age2", "out_seas212", "intens20212")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("hemi2 + clim_zone2", "hemi2 + pop_dens2", "hemi2 + med_age2", "hemi2 + out_seas212", "hemi2 + intens20212")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("hemi2 + clim_zone2 + pop_dens2", "hemi2 + clim_zone2 + med_age2", "hemi2 + clim_zone2 + out_seas212", "hemi2 + clim_zone2 + intens20212")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("hemi2 + clim_zone2 + pop_dens2 + med_age2", "hemi2 + clim_zone2 + pop_dens2 + out_seas212", "hemi2 + clim_zone2 + pop_dens2 + intens20212")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("hemi2 + clim_zone2 + pop_dens2 + out_seas212 + med_age2", "hemi2 + clim_zone2 + pop_dens2 + out_seas212 + intens20212")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset3, control = coxph.control(iter.max = 1000))))
+}
+
+Modonset3 = coxph(Surv(time, event) ~ hemi2 + clim_zone2 + pop_dens2 + out_seas212, data = DSonset3, control = coxph.control(iter.max = 1000))
+tidy(Modonset3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
+
+Modonset3 = coxph(Surv(time, event) ~ out_seas212 + med_age2 + intens20212 + hemi2 + clim_zone2, data = DSonset3, control = coxph.control(iter.max = 1000))
+tidy(Modonset3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
+
+Modonset3 = coxph(Surv(time, event) ~ out_seas212 + med_age2 + intens20212 + hemi2 + pop_dens2, data = DSonset3, control = coxph.control(iter.max = 1000))
+tidy(Modonset3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
+
+#================================================================
 # REGRESSION ANALYSIS OF PEAK 2021
 #================================================================
 
@@ -100,3 +134,26 @@ tidy(Modpeak2, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dply
 
 Modpeak2 = coxph(Surv(time, event) ~ hemi2 + strin_indx2 + pop_dens2, data = DSpeak2, control = coxph.control(iter.max = 1000))
 tidy(Modpeak2, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
+
+#================================================================
+# REGRESSION ANALYSIS OF PEAK 2022 FROM COVID-19 SUPPRESSION
+#================================================================
+
+#fit the models iteratively & store model fitted values
+for (i in c("hemi2", "out_seas212", "strin_indx2", "pop_dens2")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("strin_indx2 + hemi2", "strin_indx2 + out_seas212", "strin_indx2 + pop_dens2")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak3, control = coxph.control(iter.max = 1000))))
+}
+
+for (i in c("strin_indx2 + hemi2 + out_seas212", "strin_indx2 + hemi2 + pop_dens2")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak3, control = coxph.control(iter.max = 1000))))
+}
+
+Modpeak3 = coxph(Surv(time, event) ~ strin_indx2 + hemi2 + pop_dens2, data = DSpeak3, control = coxph.control(iter.max = 1000))
+tidy(Modpeak3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
+
+Modpeak3 = coxph(Surv(time, event) ~ strin_indx2 + hemi2 + pop_dens2 + pop_dens2, data = DSpeak3, control = coxph.control(iter.max = 1000))
+tidy(Modpeak3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% dplyr::select(term, estimate, conf.low, conf.high, p.value)
