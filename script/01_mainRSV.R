@@ -8,7 +8,7 @@
 if(!require(pacman)) install.packages("pacman")
 
 #use pacman to load packages for analysis
-pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr",  "mvtnorm", "zoo", "stringr", "survminer", "TSclust",
+pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr",  "mvtnorm", "zoo", "stringr", "survminer", "TSclust", "CircStats",
                         "patchwork", "PropCIs", "reshape2","purrr", "minqa", "ggridges", "timetk", "ggbreak", "ggpubr", "gridExtra", "readr", "survival", "dtw", "cluster",
                         "curl", "archive", "jsonlite", "janitor", "ggh4x", "distcrete", "epitrix", "mgcv", "pspline.inference", "RCurl", "XML", "psych", "ie2misc", "ggdendro", 
                         "rlist", "tsibble", "htmlwidgets", "plotly", "utils", "MLmetrics", "circular", "gsignal", "moderndive", "knitr", "dtwclust", "dendextend", "here"))
@@ -22,49 +22,44 @@ addTaskCallback(function(...) {set.seed(12345); TRUE})
 #====================================================================
 
 #set directory for downloaded datasets
-source("script/02_fileCache.R")
+#source("script/02_fileCache.R")
 
 #set archiving path for downloaded datasets
-source("script/03_runIfExpired.R")
+#source("script/03_runIfExpired.R")
 
-#load RSV case time series datasets
-source("script/04_loadCases.R")
+#load RSV case time series datasets (from WHO)
+#source("script/04_loadCases.R")
+
+#alternative to reading the datasets from various sources above, load directly from "reproduce" folder
+#ensure that results will be reproducible since data not coming from updated sources
+rsv_all <- rio::import(here("data", "reproduce", "rsv_all.csv"))
+rsv_dtw <- rio::import(here("data", "reproduce", "rsv_dtw.csv"))
+stringency <- rio::import(here("data", "reproduce", "stringency.csv"))
+climate <- rio::import(here("data", "reproduce", "climate.csv"))
 
 #plot RSV time series and weekly dynamics
-source("script/05_plotTsWkdyn.R")
+source("script/05_timeSeries.R")
 
 #Compute RSV onset timing
-source("script/06_computeOnset.R")
-
-#plot RSV onset timing
-source("script/06_plotOnset.R")
+source("script/06_onset.R")
 
 #compute RSV peak timing 
-source("script/07_computePeak.R")
-
-#plot RSV peak timing
-source("script/07_plotPeak.R")
+source("script/07_peak.R")
 
 #compute RSV growth rates
-source("script/08_computeGrowth.R")
-
-#plot RSV growth rates
-source("script/08_plotGrowth.R")
+source("script/08_growth.R")
 
 #compute intensity
-source("script/09_computeIntensity.R")
+source("script/09_intensity.R")
 
-#plot RSV intensity
-source("script/09_plotIntensity.R")
+#compute univariate regression models
+source("script/10_univariate.R")
 
-#compute and plot univariate regression models of onset, peak, growth rates and intensity
-source("script/10_univarRegress.R")
+#compute multivariate regression models
+source("script/11_multivariate.R")
 
-#compute multivariate regression output of onset, peak, growth rates and intensity
-source("script/11_multivarRegress.R")
-
-#dynamic time warping and time series classification
+#time series dynamic time warping and classification
 source("script/12_dynTimeWarp.R")
 
-#dynamic time warping and time series classification
+#descriptive stats
 source("script/13_computeDesc.R")

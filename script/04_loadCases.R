@@ -472,6 +472,13 @@ rsv_usaSo <- runIfExpired('usa_rsv/rsv2021So+', maxage = 168, ~XML::readHTMLTabl
 rsv_usaWe <- runIfExpired('usa_rsv/rsv2021We+', maxage = 168, ~XML::readHTMLTable(getURL("https://www.cdc.gov/surveillance/nrevss/images/trend_images/RSV14NumCent5AVG_Reg4.htm",.opts = list(ssl.verifypeer = FALSE)), header = TRUE))[["RSV Numerator Data for Census Region 4(5 week Average)"]]
 rsv_usaFl <- runIfExpired('usa_rsv/rsv2021Fl+', maxage = 168, ~XML::readHTMLTable(getURL("https://www.cdc.gov/surveillance/nrevss/images/trend_images/RSV14NumCent5AVG_FL.htm",.opts = list(ssl.verifypeer = FALSE)), header = TRUE))[["RSV Data for Florida(5 week Average)"]]
 
+#since CDC data keep on changing or being archived, use this as per download in Mar 2023
+rsv_usaNE <- rio::import(here("data", "usa_rsv", "rsv2021NE+", "2023_03_17_16_58.rds"))[["RSV Numerator Data for Census Region 1(5 week Average)"]] %>% dplyr::select(everything(), -1)
+rsv_usaMW <- rio::import(here("data", "usa_rsv", "rsv2021MW+", "2023_03_17_16_58.rds"))[["RSV Numerator Data for Census Region 2(5 week Average)"]] %>% dplyr::select(everything(), -1)
+rsv_usaSo <- rio::import(here("data", "usa_rsv", "rsv2021So+", "2023_03_17_16_58.rds"))[["RSV Numerator Data for Census Region 3(5 week Average)"]] %>% dplyr::select(everything(), -1)
+rsv_usaWe <- rio::import(here("data", "usa_rsv", "rsv2021We+", "2023_03_17_16_58.rds"))[["RSV Numerator Data for Census Region 4(5 week Average)"]] %>% dplyr::select(everything(), -1)
+rsv_usaFl <- rio::import(here("data", "usa_rsv", "rsv2021Fl+", "2023_03_17_16_58.rds"))[["RSV Data for Florida(5 week Average)"]] %>% dplyr::select(everything(), -1)
+
 #data wrangling
 rsv_usa_reg1 <-
   base::rbind(
@@ -537,6 +544,9 @@ utils::str(rsv_usa_reg1)
 #read the CDC RSV update file/dataset into R (US regional data from 2020 backwards)
 #source (https://healthdata.gov/dataset/Respiratory-Syncytial-Virus-Laboratory-Data-NREVSS/7zgq-bp9w)
 rsv_usa_reg2 <- runIfExpired('usa_rsv/rsv2020-', maxage = 168, ~read.csv(curl("https://data.cdc.gov/api/views/52kb-ccu2/rows.csv?accessType=DOWNLOAD")))
+
+#since CDC data keep on changing or being archived, use this as per download in Mar 2023
+rsv_usa_reg2 <- rio::import(here("data", "usa_rsv", "rsv2020-", "2023_03_17_17_57.rds"))
 
 #get the required variables
 rsv_usa_reg2 <-
@@ -660,25 +670,72 @@ climate <-
   rio::import(here::here("data", "climate", "climate.csv"))
 
 #================================================================
-# DOWNLOAD AND BUILD A STRINGENCY DATASET
+# DOWNLOAD AND FIT A STRINGENCY DATASET TO GAM & ROLL MEAN
 #================================================================
 
-#input dynamics stringency dataset
-stringency <- read.csv(curl("https://covid.ourworldindata.org/data/owid-covid-data.csv"))
-
-stringency <-
-  stringency %>%
+#download from OXFORD and manipulate a stringency dataset
+stringency <- 
+  read.csv(curl("https://covid.ourworldindata.org/data/owid-covid-data.csv")) %>%
   dplyr::select(location, date, stringency_index, population_density, median_age) %>%
   dplyr::rename("country" = location, "fdate" = date, "strin_indx" = stringency_index, "pop_dens" = population_density, "med_age" = median_age) %>%
   dplyr::filter(!is.na(strin_indx)) %>%
-  dplyr::mutate(fdate = date(fdate),
+  dplyr::mutate(fdate = date(fdate), 
                 country = ifelse(country == "United Kingdom", "Scotland", country))
 
+#stringency patterns for Northern Ireland are absent in the OXFORD dataset
+#assume Northern Ireland has similar stringency patterns as Scotland
 stringency <-
   stringency %>%
   dplyr::filter(country == "Scotland") %>%
   dplyr::mutate(country = ifelse(country == "Scotland", "Northern Ireland", country)) %>%
   dplyr::bind_rows(stringency)
+
+#generate additional non-linear trend variable of restrictions in selected countries considered for analysis
+stringency1 <-
+  stringency %>%
+  dplyr::filter(country %in% c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa",
+                               "Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) %>%
+  dplyr::select(country, fdate, strin_indx) %>%
+  dplyr::group_by(country) %>%
+  dplyr::mutate(dyz = seq.int(from = 1, by = 1, length.out = n()), 
+                strin_indx = strin_indx) %>%
+  dplyr::ungroup() %>%
+  base::split(list(.$country))
+
+#create empty list to store non-linear models
+Gmodels <- list()
+
+#fit GAM models to stringency to impose non-linear trend
+for (i in names(stringency1)){
+  Gmodels[[i]] <- gam(strin_indx ~ s(x = dyz, bs = "ps"),
+                      family = poisson,
+                      method = "GCV.Cp",
+                      control = list(maxit = 100000),
+                      data = stringency1[[i]])
+  stringency1[[i]] <- cbind(stringency1[[i]], Gmodels[[i]]$fitted.values)
+}
+
+#regenerate the stringency dataset with non-linear variable in it
+stringency <-
+  dplyr::bind_rows(stringency1, .id = "country") %>%
+  dplyr::rename("strin_indxG" = "Gmodels[[i]]$fitted.values") %>%
+  dplyr::select(everything(), -dyz, - strin_indx) %>%
+  dplyr::left_join(stringency, by = c("country", "fdate"))
+rm(stringency1)
+
+#now regenerate additional variable which is 30d rolling average linear trend of restrictions in selected countries considered for analysis
+stringency <-
+  stringency %>%
+  dplyr::filter(country %in% c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa",
+                               "Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) %>%
+  dplyr::select(country, fdate, strin_indx) %>%
+  arrange(country, fdate) %>%
+  dplyr::group_by(country) %>%
+  dplyr::mutate(strin_indxL = if_else(strin_indx >0, zoo::rollmean(strin_indx, k = 30, fill = 0, align = 'right'), 0)) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(everything(), - strin_indx) %>%
+  dplyr::left_join(stringency, by = c("country", "fdate"))
+rm(stringency1)
 
 #====================================================================
 #SET PROPER DATA BOUNDARIES FOR ANALYSIS
@@ -705,3 +762,9 @@ rsv_all <-
       dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") & 
                       date >= date("2017-06-11") & date < date("2023-06-04"))
     )
+
+#export updated data to use hencefourth 
+# readr::write_csv(x = rsv_all, file = here("data", "reproduce", "rsv_all.csv"))
+# readr::write_csv(x = rsv_dtw, file = here("data", "reproduce", "rsv_dtw.csv"))
+# readr::write_csv(x = stringency, file = here("data", "reproduce", "stringency.csv"))
+# readr::write_csv(x = climate, file = here("data", "reproduce", "climate.csv"))

@@ -1,50 +1,46 @@
-country,wk_scale,clim_zone,latitude,out_seas21
-Belize,normal,Tropical,15-N,no
-Bolivia,normal,Tropical,15-S,no
-Canada,inverted,Temperate,45-N,no
-Central African Republic,normal,Tropical,00-C,no
-Costa Rica,normal,Tropical,15-N,no
-England,inverted,Temperate,60-N,no
-France,inverted,Temperate,45-N,no
-Guatemala,inverted,Tropical,15-N,no
-Honduras,inverted,Tropical,15-N,no
-Hungary,inverted,Temperate,45-N,no
-India,normal,Tropical,30-N,no
-Ireland,inverted,Temperate,60-N,no
-Ivory Coast,normal,Tropical,00-C,no
-Madagascar,inverted,Tropical,15-S,no
-Mexico,inverted,Sub-tropical,30-N,no
-Nicaragua,normal,Tropical,15-N,no
-Paraguay,normal,Sub-tropical,30-S,no
-Qatar,inverted,Sub-tropical,30-N,no
-Slovakia,inverted,Sub-tropical,45-N,no
-South Africa,normal,Sub-tropical,30-S,no
-Uruguay,normal,Temperate,30-S,no
-Australia,normal,Sub-tropical,30-S,yes
-Brazil,inverted,Tropical,15-S,yes
-Bulgaria,inverted,Temperate,45-N,yes
-Colombia,normal,Tropical,00-C,yes
-Denmark,inverted,Temperate,60-N,yes
-Dominican,normal,Tropical,15-N,yes
-Ecuador,inverted,Tropical,00-C,yes
-El Salvador,normal,Tropical,15-N,yes
-Germany,inverted,Temperate,45-N,yes
-Iceland,inverted,Temperate,60-N,yes
-Japan,normal,Temperate,45-N,yes
-Malaysia,normal,Tropical,00-C,yes
-Mongolia,inverted,Sub-tropical,45-N,yes
-Netherlands,inverted,Temperate,45-N,yes
-Northern Ireland,inverted,Temperate,60-N,yes
-Oman,inverted,Sub-tropical,30-N,yes
-Panama,inverted,Tropical,15-N,yes
-Peru,normal,Sub-tropical,15-S,yes
-Portugal,inverted,Sub-tropical,45-N,yes
-Scotland,inverted,Temperate,60-N,yes
-Spain,inverted,Sub-tropical,45-N,yes
-Sweden,inverted,Temperate,60-N,yes
-United States,inverted,Temperate,45-N,yes
-Argentina,normal,Sub-tropical,45-S,yes
-United States Mid West,inverted,,,
-United States North East,inverted,,,
-United States South,inverted,,,
-United States West,inverted,,,
+country,wk_scale,clim_zone,out_seas21,clim
+Belize,normal,Tropical,no,Tropical
+Bolivia,normal,Tropical,no,Tropical
+Canada,inverted,Temperate,no,Temperate
+Central African Republic,normal,Tropical,no,Tropical
+Costa Rica,normal,Tropical,no,Tropical
+England,inverted,Temperate,no,Temperate
+France,inverted,Temperate,no,Temperate
+Guatemala,inverted,Tropical,no,Tropical
+Honduras,inverted,Tropical,no,Tropical
+Hungary,inverted,Temperate,no,Temperate
+India,normal,Tropical,no,Tropical
+Ireland,inverted,Temperate,no,Temperate
+Ivory Coast,normal,Tropical,no,Tropical
+Madagascar,inverted,Tropical,no,Tropical
+Mexico,inverted,Sub-tropical,no,Tropical
+Nicaragua,normal,Tropical,no,Tropical
+Paraguay,normal,Sub-tropical,no,Tropical
+Qatar,inverted,Sub-tropical,no,Tropical
+Slovakia,inverted,Sub-tropical,no,Tropical
+South Africa,normal,Sub-tropical,no,Tropical
+Uruguay,normal,Temperate,no,Temperate
+Australia,normal,Sub-tropical,yes,Tropical
+Brazil,inverted,Tropical,yes,Tropical
+Bulgaria,inverted,Temperate,yes,Temperate
+Colombia,normal,Tropical,yes,Tropical
+Denmark,inverted,Temperate,yes,Temperate
+Dominican,normal,Tropical,yes,Tropical
+Ecuador,inverted,Tropical,yes,Tropical
+El Salvador,normal,Tropical,yes,Tropical
+Germany,inverted,Temperate,yes,Temperate
+Iceland,inverted,Temperate,yes,Temperate
+Japan,normal,Temperate,yes,Temperate
+Malaysia,normal,Tropical,yes,Tropical
+Mongolia,inverted,Sub-tropical,yes,Tropical
+Netherlands,inverted,Temperate,yes,Temperate
+Northern Ireland,inverted,Temperate,yes,Temperate
+Oman,inverted,Sub-tropical,yes,Tropical
+Panama,inverted,Tropical,yes,Tropical
+Peru,normal,Sub-tropical,yes,Tropical
+Portugal,inverted,Sub-tropical,yes,Tropical
+Scotland,inverted,Temperate,yes,Temperate
+Spain,inverted,Sub-tropical,yes,Tropical
+Sweden,inverted,Temperate,yes,Temperate
+United States,inverted,Temperate,yes,Temperate
+Argentina,normal,Sub-tropical,yes,Tropical

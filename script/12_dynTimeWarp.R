@@ -147,8 +147,7 @@ hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus
 
 #plot ggdendrogram to show hierarchical clustering
 labs <- label(dendro_data(as.dendrogram(dtw_hc)))
-labs$Cluster <- c(rep("2", 3), rep("4", 3), rep("3", 7), rep("1", 13))
-#labs$Cluster <- c(rep("2", 3), rep("4", 3), rep("3", 13), rep("1", 8))
+labs$Cluster <- c(rep("4", 3), rep("2", 3), rep("1", 7), rep("3", 13))
 
 B <-
   ggdendro::ggdendrogram(dtw_hc) +
