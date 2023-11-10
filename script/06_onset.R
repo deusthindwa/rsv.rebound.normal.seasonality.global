@@ -204,8 +204,8 @@ O1 <-
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
   geom_text(aes(x = 42, y = 5, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "First wave RSV onset timing", title = "") +
   theme(legend.position = "right", legend.title = element_blank()) +
@@ -219,8 +219,8 @@ O2 <-
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
   geom_text(aes(x = 42, y = 5, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Second wave RSV onset timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -234,8 +234,8 @@ O3 <-
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
   geom_text(aes(x = 42, y = 5, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV onset timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -275,13 +275,13 @@ O4 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
-  labs(x = "", y = "First wave RSV onset timing", title = "") +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "", y = "First wave RSV onset timing", title = "ONSET TIMING") +
+  theme(legend.position = "none", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -290,10 +290,10 @@ O5 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Second wave RSV onset timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -305,10 +305,10 @@ O6 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(1,52)) +
+  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV onset timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +

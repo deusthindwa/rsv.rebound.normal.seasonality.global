@@ -53,7 +53,7 @@ source("script/08_growth.R")
 source("script/09_intensity.R")
 
 #compute univariate regression models
-source("script/10_univariate.R")
+source("script/10_regression.R")
 
 #compute multivariate regression models
 source("script/11_multivariate.R")

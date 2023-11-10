@@ -2,42 +2,6 @@
 #Date: 01/03/2023
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
-#====================================================================
-#MAKE ALL RSV ONSET/PEAK/GROWTH/INTENSITY CORRELATION PLOTS
-#====================================================================
-
-ggsave(here("output", "sfig7a_corHemisphere.png"),
-       plot = ((A1/A2) | (B1/B2))/((C1/C2) | (D1/D2)),
-       width = 22, height = 18, unit = "in", dpi = 300)
-
-ggsave(here("output", "sfig7b_corClimatezone.png"),
-       plot = ((A3/A4) | (B3/B4))/((C3/C4) | (D3/D4)),
-       width = 22, height = 18, unit = "in", dpi = 300)
-
-#================================================================
-# SMOOTHED STRINGENCY INDEX PLOT
-#================================================================
-A <-
-  stringency %>%
-  ggplot(aes(x = date, y = cases)) +
-  geom_point(aes(x = fdate, y = strin_indx, group = country, color = country), color = "gray50", size = 3.5) + #reported
-  geom_line(aes(x = fdate, y = strin_indxG, group = country, color = country), size = 1.5) + #GAM fitted
-  geom_line(aes(x = fdate, y = strin_indxL, group = country), color = "black", size = 1.5) + #30d moving average
-  theme_bw(base_size = 11, base_family = "Lato", base_line_size = 1.5) + 
-  labs(title = "", x = "Reporting date", y = "Stringency index") +
-  scale_x_date(date_labels = "%b %y", date_breaks = "1 year") +
-  scale_y_continuous(labels = function(x) format(x, scientific = FALSE), limits = c(0,100)) +
-  facet_wrap(.~ country, ncol = 4, scales = "free_y") +
-  theme_bw(base_size = 15, base_family = 'Lato') +
-  theme(axis.text.x = element_text(angle = 30, vjust = 0.5, hjust = 0.3)) +
-  theme(legend.position = "none", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
-
-#combined plots and saving
-ggsave(here("output", "sfig7_strinDist.png"),
-       plot = (A),
-       width = 20, height = 17, unit="in", dpi = 300)
-
 #================================================================
 # CREATE OUT OF SEASON STATUS
 #================================================================
@@ -407,6 +371,13 @@ X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave intensity") %>% dp
 #================================================================
 
 #onset timing during first wave (only statistically significant results)
+for (i in c("hemi2", "scale(med_age)")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000))))
+}
+for (i in c("hemi2 + scale(med_age)")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000))))
+}
+
 Y1 = coxph(Surv(time, event) ~  hemi2 + scale(med_age), 
            data = DSonset1, 
            control = coxph.control(iter.max = 1000))

@@ -251,8 +251,8 @@ I1 <-
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
-  labs(x = "", y = "First wave RSV intensity", title = "") +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "", y = "First wave RSV intensity", title = "INTENSITY") +
+  theme(legend.position = "none", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -325,7 +325,7 @@ I4 <-
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
-  labs(x = "", y = "First wave RSV intensity", title = "") +
+  labs(x = "", y = "First wave RSV intensity", title = "INTENSITY") +
   theme(legend.position = "right", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 

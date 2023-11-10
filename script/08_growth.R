@@ -201,13 +201,13 @@ G1 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.5, y = 0.2, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
-  labs(x = "", y = "First wave RSV growth rate", title = "") +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "", y = "First wave RSV growth rate", title = "GROWTH RATE") +
+  theme(legend.position = "NONE", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -216,7 +216,7 @@ G2 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.5, y = 0.2, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -231,13 +231,13 @@ G3 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = dplyr::bind_rows(growth_overall, growth_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.5, y = 0.2, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = dplyr::bind_rows(growth_overall, growth_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV growth rate", title = "") +
-  theme(legend.position = "none", legend.title = element_blank()) +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
   theme(strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -275,13 +275,13 @@ G4 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.5, y = 0.2, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
-  labs(x = "", y = "First wave RSV growth rate", title = "") +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "", y = "First wave RSV growth rate", title = "GROWTH RATE") +
+  theme(legend.position = "none", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -290,7 +290,7 @@ G5 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.5, y = 0.2, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -305,7 +305,7 @@ G6 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = growth_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.5, y = 0.2, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = growth_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
