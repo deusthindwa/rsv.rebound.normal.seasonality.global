@@ -299,10 +299,10 @@ ggplot() +
   labs(title = "ONSET-INTENSITY RELATIONSHIP", x = "Epidemic onset date", y = "RSV epidemic waves following COVID-19 suppression") +
   theme(legend.text = element_text(size = 10), legend.position = "right", legend.title = element_text(size = 11)) +
   guides(size = guide_legend(title = "Intensity"), color = guide_legend(title = "Country")) +
-  theme(strip.text.x = element_text(size = 0), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray")) +
+  theme(strip.text.x = element_text(size = 0), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray80")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
 #plot the onset-intensity relationship
 ggsave(here("output", "sfig12_onset_intensity.png"),
        plot = (B),
-       width = 16, height = 12, unit="in", dpi = 300)
+       width = 18, height = 10, unit="in", dpi = 300)
