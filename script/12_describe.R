@@ -44,37 +44,35 @@ ggsave(here("output", "sfig9_corClimate.png"),
 #====================================================================
 
 #define dataset for descriptive stats
-rsv_descp <-
-rsv_onset %>%
-  dplyr::filter(!(country %in% c("United States North East", "United States South", "United States West", "United States Mid West"))) %>%
-  distinct(country, .keep_all = TRUE) %>%
-  dplyr::select(country, clim_zone, hemi, region)
+rsv_desc <-
+rsv_all %>%
+  dplyr::select(country, hemi, region) %>%
+  dplyr::distinct(country, .keep_all = TRUE) %>%
+  dplyr::left_join(climate %>% dplyr::select(country, clim, outSeasW1)) %>%
+  dplyr::mutate(clim = if_else(clim == "Tropical", "(Sub)Tropical", "Temperate"))
 
-#====================================================================
-# numbers and proportions by predictors
+#numbers and proportions by predictors
 #hemi
-rsv_descp %>%
+rsv_desc %>%
   dplyr::group_by(hemi) %>%
   dplyr::tally() %>%
   dplyr::mutate(p = n/sum(n)*100)
 
 #climate zone
-rsv_descp %>%
-  dplyr::group_by(clim_zone) %>%
+rsv_desc %>%
+  dplyr::group_by(clim) %>%
   dplyr::tally() %>%
   dplyr::mutate(p = n/sum(n)*100)
 
 #out of normal RSV season
-rsv_descp %>%
-  dplyr::left_join(climate %>% dplyr::select(country, out_seas21)) %>%
-  dplyr::group_by(out_seas21) %>%
+rsv_desc %>%
+  dplyr::group_by(outSeasW1) %>%
   dplyr::tally() %>%
   dplyr::mutate(p = n/sum(n)*100)
 
-#====================================================================
-# distribution of stringency
+#distribution of stringency
 #hemi
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   dplyr::mutate(phase = ifelse(date(fdate) >='2020-01-01' & date(fdate) <='2021-06-30', "covid",
                                ifelse(date(fdate) >='2021-07-01' & date(fdate) <='2022-06-30', "t2021",
@@ -87,22 +85,21 @@ rsv_descp %>%
   dplyr::ungroup()
 
 #climate zone
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   dplyr::mutate(phase = ifelse(date(fdate) >='2020-01-01' & date(fdate) <='2021-06-30', "covid",
                                ifelse(date(fdate) >='2021-07-01' & date(fdate) <='2022-06-30', "t2021",
                                       ifelse(date(fdate) >='2022-07-01' & date(fdate) <='2023-06-30', "t2022", NA_character_)))) %>%
   dplyr::filter(!is.na(phase)) %>%
-  dplyr::group_by(phase, clim_zone) %>%
-  dplyr::summarise(Q2str = median(strin_indx),
-                   Q1str = quantile(strin_indx, 0.25),
-                   Q3str = quantile(strin_indx, 0.75)) %>%
+  dplyr::group_by(phase, clim) %>%
+  dplyr::summarise(Q2str = median(strin_indxL),
+                   Q1str = quantile(strin_indxL, 0.25),
+                   Q3str = quantile(strin_indxL, 0.75)) %>%
   dplyr::ungroup()
 
-#====================================================================
-# distribution of population density
+#distribution of population density
 #hemi
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   dplyr::group_by(hemi) %>%
   summarise(Q2pop = median(pop_dens),
@@ -110,17 +107,16 @@ rsv_descp %>%
             Q3pop = quantile(pop_dens, 0.75))
 
 #climate zone
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
-  dplyr::group_by(clim_zone) %>%
+  dplyr::group_by(clim) %>%
   summarise(Q2pop = median(pop_dens),
             Q1pop = quantile(pop_dens, 0.25),
             Q3pop = quantile(pop_dens, 0.75))
 
-#====================================================================
-# distribution of median age
+#distribution of median age
 #hemi
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   dplyr::group_by(hemi) %>%
   summarise(Q2pop = median(med_age),
@@ -128,9 +124,9 @@ rsv_descp %>%
             Q3pop = quantile(med_age, 0.75))
 
 #climate zone
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
-  dplyr::group_by(clim_zone) %>%
+  dplyr::group_by(clim) %>%
   summarise(Q2pop = median(med_age),
             Q1pop = quantile(med_age, 0.25),
             Q3pop = quantile(med_age, 0.75))
@@ -140,7 +136,7 @@ rsv_descp %>%
 #====================================================================
 
 D1 <-
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   ggplot() +
   geom_line(aes(x = fdate, y = strin_indx, color = hemi)) +
@@ -151,21 +147,20 @@ rsv_descp %>%
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   scale_color_manual(values=c("#36454F", "#7CAE00"))
 
-
 D2 <-
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(stringency) %>%
   ggplot() +
-  geom_line(aes(x = fdate, y = strin_indx, color = clim_zone)) +
+  geom_line(aes(x = fdate, y = strin_indx, color = clim)) +
   theme_bw(base_size = 14, base_family = 'American typewriter') +
   labs(x = "Date of report", y = "Stringency index", title = "(B)") +
   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 12), axis.text.y = element_text(face = "bold", size = 12)) +
   theme(legend.position = "none", legend.title = element_blank()) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  scale_color_manual(values=c("#00BFC4", "#FFC133", "#7D33FF"))
+  scale_color_manual(values=c("#00BFC4", "#FFC133"))
 
 D3 <- 
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(
     stringency %>%
       dplyr::group_by(country) %>%
@@ -181,23 +176,23 @@ rsv_descp %>%
   scale_fill_manual(values=c("#36454F", "#7CAE00"))
 
 D4 <-
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(
     stringency %>%
       dplyr::group_by(country) %>%
       dplyr::summarise(pop_den = mean(pop_dens)) %>%
       dplyr::ungroup()) %>%
-  ggplot(aes(y = pop_den, fill = clim_zone)) + 
+  ggplot(aes(y = pop_den, fill = clim)) + 
   geom_boxplot(color = "black", size = 1) +
   theme_bw(base_size = 14, base_family = "American typewriter") +
   scale_y_continuous(trans = log10_trans()) +
   labs(x = "", y = "Population density (log10)", title = "(D)") +
   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
   theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  scale_fill_manual(values=c("#00BFC4", "#FFC133", "#7D33FF"))
+  scale_fill_manual(values=c("#00BFC4", "#FFC133"))
 
 D5 <-
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(
     stringency %>%
       dplyr::group_by(country) %>%
@@ -213,212 +208,101 @@ rsv_descp %>%
   scale_fill_manual(values=c("#36454F", "#7CAE00"))
 
 D6 <-
-rsv_descp %>%
+rsv_desc %>%
   dplyr::left_join(
     stringency %>%
       dplyr::group_by(country) %>%
       dplyr::summarise(pop_age = mean(med_age)) %>%
       dplyr::ungroup()) %>%
-  ggplot(aes(y = pop_age, fill = clim_zone)) + 
+  ggplot(aes(y = pop_age, fill = clim)) + 
   geom_boxplot(color = "black", size = 1) +
   theme_bw(base_size = 14, base_family = "American typewriter") +
   labs(x = "", y = "Population median age (years)", title = "(F)") +
   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
   theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  scale_fill_manual(values=c("#00BFC4", "#FFC133", "#7D33FF"))
-
+  scale_fill_manual(values=c("#00BFC4", "#FFC133"))
 
 # combine all the plots
-ggsave(here("output", "sfig7_pred_destribution.png"),
+ggsave(here("output", "sfig6_pred_distribution.png"),
        plot = (D1 | D3 | D5)/(D2 | D4 | D6),
        width = 20, height = 14, unit="in", dpi = 300)
-
-#====================================================================
-#====================================================================
-
-#load cluster dataset
-rsv_cluster <- import(here("data", "cluster.xlsx"))
-
-#combine cluster dataset with onset dataset
-A <-
-rsv_onset %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::group_by(cluster, covper) %>%
-  dplyr::mutate(avg_onset = median(epiwk)) %>%
-  dplyr::ungroup() %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = avg_onset, color = covper), size = 3, shape = 1, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with peak timing dataset
-B <-
-rsv_peak2 %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::group_by(cluster, covper) %>%
-  dplyr::mutate(avg_peak = median(difloc)) %>%
-  dplyr::ungroup() %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = avg_peak, color = covper), size = 3, shape = 2, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with intensity dataset
-C <-
-rsv_intens2 %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::group_by(cluster, covper) %>%
-  dplyr::mutate(avg_intensity = median(intensity)) %>%
-  dplyr::ungroup() %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = avg_intensity, color = covper), size = 3, shape = 5, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with growth rate dataset
-D <-
-rsv_growth2%>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::group_by(cluster, covper) %>%
-  dplyr::mutate(avg_growth = median(pks),
-                covper = if_else(covper == "y2021", "first wave",
-                                 if_else(covper == "y2022", "second wave", NA_character_))) %>%
-  dplyr::ungroup() %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = avg_growth, color = covper), size = 3, shape = 0, stroke = 2) +
-  theme_bw(base_size = 18, base_family = 'Lato')
-
-A|B|C|D
-
-
-#====================================================================
-#====================================================================
-
-#load cluster dataset
-rsv_cluster <- import(here("data", "cluster.xlsx"))
-
-#combine cluster dataset with onset dataset
-A <-
-  rsv_onset %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::rename("Onset" = "epiwk") %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = Onset, color = covper), size = 3, shape = 1, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with peak timing dataset
-B <-
-  rsv_peak2 %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::rename("Peak" = "difloc") %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = Peak, color = covper), size = 3, shape = 2, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with intensity dataset
-C <-
-  rsv_intens2 %>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::rename("Intensity" = "intensity") %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = Intensity, color = covper), size = 3, shape = 5, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato') +
-  theme(legend.position = "none", legend.title = element_blank())
-
-#combine cluster dataset with growth rate dataset
-D <-
-  rsv_growth2%>%
-  left_join(rsv_cluster) %>%
-  dplyr::filter(covper != "precov") %>%
-  dplyr::mutate(covper = if_else(covper == "y2021", "first wave",
-                                 if_else(covper == "y2022", "second wave", NA_character_))) %>%
-  dplyr::rename("Growth" = "pks") %>%
-  ggplot() +
-  geom_point(aes(x = cluster, y = Growth, color = covper), size = 3, shape = 0, stroke = 2) +
-  xlim(1,4) +
-  theme_bw(base_size = 18, base_family = 'Lato')
-
-A|B|C|D
-
-
-
-
-
-
-
-
-
-
-
-#Authors: Deus & Dan
-#Date: 01/03/2023
-#Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
 #====================================================================
 #COMBINING EPIDEMIC ONSET AND INTENSITY ON THE SAME PLOT
 #====================================================================
 
 #intensity first and second wave
-DSintensity <-
+OnsetIntens <-
   bind_cols(
-    DSintens1 %>% rename("intens1" = "intensity") %>% select(country, intens1),
-    DSintens2 %>% rename("intens2" = "intensity") %>% select(intens2))
+    DSintense1 %>% rename("intens1" = "intensity") %>% select(country, intens1),
+    DSintense2 %>% rename("intens2" = "intensity") %>% select(intens2),
+    intense2 %>% dplyr::select(wave3) %>% dplyr::rename("intens3" = "wave3")
+    )
 
 #onset first and second wave
-DS01 <- DSonset1 %>% 
+OnsetIntens1 <- 
+  DSonset1 %>% 
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "first wave") %>% 
-  left_join(DSintensity) %>%
+  left_join(OnsetIntens) %>%
   mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden"), "Northern hemisphere ", "Southern hemisphere")))
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
-DS02 <- DSonset2 %>% 
+OnsetIntens2 <- 
+  DSonset2 %>% 
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "second wave") %>% 
-  left_join(DSintensity) %>%
+  left_join(OnsetIntens) %>%
   mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden"), "Northern hemisphere ", "Southern hemisphere")))
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
-#combine first and second wave onsets as adjacent columns
-DS03 <-
-  bind_cols(DS01, 
-            DS02 %>% 
-              dplyr::select(country, fdate, wave) %>% 
-              rename("countryx" = "country", "fdatex" = "fdate", "wavex" = "wave")) %>%
+OnsetIntens3 <- 
+  OnsetIntens %>%
+  left_join(
+  onset2x %>% 
+  dplyr::filter(wave == "wave3") %>% 
+  dplyr::mutate(wave = "third wave")) %>% 
+
   mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden"), "Northern hemisphere ", "Southern hemisphere")))
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  dplyr::select(country, date, intens1, intens2, intens3, hemix, wave)
+
+
+#combine first, second and third wave onsets as adjacent columns
+OnsetIntens4 <-
+  bind_cols(OnsetIntens1, 
+            OnsetIntens2 %>% 
+              dplyr::select(country, fdate, wave) %>% 
+              dplyr::rename("countryx" = "country", "fdatex" = "fdate", "wavex" = "wave"),
+            OnsetIntens3 %>% 
+              dplyr::select(country, date, wave) %>% 
+              dplyr::rename("countryxx" = "country", "fdatexx" = "date", "wavexx" = "wave"))
 
 #plot the bubble of waves and intensity
+B <-
 ggplot() +
-  geom_point(data = DS01, aes(x = fdate, y = wave, color = country, size = intens1), shape = 21, alpha = 0.75,  stat = "identity") +
-  geom_point(data = DS02, aes(x = fdate, y = wave, color = country, size = intens2), shape = 21, alpha = 0.75, stat = "identity") +
+  geom_point(data = OnsetIntens1, aes(x = fdate, y = wave, color = country, size = intens1), shape = 21, stroke = 2, alpha = 0.75,  stat = "identity") +
+  geom_point(data = OnsetIntens2, aes(x = fdate, y = wave, color = country, size = intens2), shape = 21, stroke = 2, alpha = 0.75, stat = "identity") +
+  geom_point(data = OnsetIntens3 %>% dplyr::filter(!is.na(date)), aes(x = date, y = wave, color = country, size = intens3), shape = 21, stroke = 2, alpha = 0.75, stat = "identity") +
   scale_size_continuous(limits = c(0.01, 10), range = c(1,10)) + 
-  geom_segment(data = DS03, aes(x = fdate, y = wave, xend = fdatex, yend = wavex, colour = country), stat = "identity") +
-  geom_text(data = DS03, aes(x = fdatex, y = wavex, label = str_sub(country, 1,2)), size = 2, angle = "45", vjust = -2, hjust = 0.5, fontface = "bold", position = position_dodge(width = 1.5)) +
-  scale_x_date(breaks = c((date(c("2021-03-01", "2021-06-01", "2021-09-01", "2021-12-01", "2022-03-01", "2022-06-01", "2022-09-01", "2022-12-01")))),
-               limits = c((date(c("2021-02-01", "2023-01-01")))),
+  geom_segment(data = OnsetIntens4, aes(x = fdate, y = wave, xend = fdatex, yend = wavex, colour = country), stat = "identity") +
+  geom_segment(data = OnsetIntens4 %>% dplyr::filter(!is.na(fdatexx)), aes(x = fdatex, y = wavex, xend = fdatexx, yend = wavexx, colour = country), stat = "identity") +
+  geom_text(data = OnsetIntens4, aes(x = fdate, y = wave, label = str_sub(country, 1,2)), size = 4, angle = "45", vjust = -0.5, hjust = 1.5, fontface = "bold", position = position_dodge(width = 1)) +
+  scale_x_date(breaks = c((date(c("2020-06-01", "2020-09-01", "2020-12-01", "2021-03-01", "2021-06-01", "2021-09-01", "2021-12-01", "2022-03-01", "2022-06-01", "2022-09-01", "2022-12-01")))),
+               limits = c((date(c("2020-06-01", "2023-01-01")))),
                date_labels = "%m-%Y") +
   facet_grid(hemix~.) +
-  theme_bw(base_size = 14, base_family = "Lato") + 
-  labs(title = "", x = "Onset date", y = "RSV epidemic waves") +
-  theme(legend.text = element_text(size = 8), legend.position = "right", legend.title = element_text(size = 8)) +
-  guides(size = guide_legend(title = "Intensity\n(scaled magnitude of cases)"), color = guide_legend(title = "Country")) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
-  theme(axis.text.y = element_text(face = "bold", size = 10)) 
+  theme_bw(base_size = 14, base_family = "Amrican Typewriter") + 
+  labs(title = "ONSET-INTENSITY RELATIONSHIP", x = "Epidemic onset date", y = "RSV epidemic waves following COVID-19 suppression") +
+  theme(legend.text = element_text(size = 10), legend.position = "right", legend.title = element_text(size = 11)) +
+  guides(size = guide_legend(title = "Intensity"), color = guide_legend(title = "Country")) +
+  theme(strip.text.x = element_text(size = 0), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
+#plot the onset-intensity relationship
+ggsave(here("output", "sfig12_onset_intensity.png"),
+       plot = (B),
+       width = 16, height = 12, unit="in", dpi = 300)
