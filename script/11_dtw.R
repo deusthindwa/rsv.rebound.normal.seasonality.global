@@ -10,23 +10,22 @@ X <-
 
     #set southern hemisphere countries to start from 1st week of 2020 to 52th week of 2022
       rsv_dtw %>%
-      dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "Japan", "Paraguay", "Peru", "South Africa") & #"India",
-                      date >= date("2017-01-08") &
-                      date <= date("2022-12-31")),
+      dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "Japan", "Paraguay", "Peru", "South Africa") & #Colombia, India
+                      date >= date("2017-01-08") & 
+                      date <= date("2022-12-31")), #"2022-10-07"
 
     #set northern hemisphere countries to start from 24th week of 2020 to 23rd week of 2023
       rsv_dtw %>%
       dplyr::filter(country %in% c("Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States") &
-                      date >= date("2017-06-11") & 
-                      date < date("2023-06-04"))) %>%
+                      date >= date("2017-06-11") & #"2017-06-11"
+                      date < date("2023-06-04"))) %>% #"2023-03-12"
   
   arrange(country, date) %>%
   group_by(country) %>%
   dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n())) %>%
   dplyr::ungroup() %>%
   dplyr::select(country, seqwk, cases) %>%
- 
-  #dplyr::select(seqwk, seqwk2, cases, country) %>%
+  dplyr::add_row(country = rep("United States", 12), seqwk = 301:312, cases = rep(0, 12)) %>% #add zeros to US to align time series dimension
   base::split(list(.$country))
 
 #delete empty country.yr data frames from list X (they have less than threshold total cases [tcases] throughout the year)
@@ -50,15 +49,13 @@ for (i in names(X)) {
 #iterate for each country, extract fitted case values
 for (i in names(X)){
   DsTs[[i]] = data.frame(fitcases = Gmodels[[i]]$fitted.values) %>% 
-    dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n()))
-  
-  DsLog[[i]] = data.frame(deriv = diff(log(DsTs[[i]]$fitcases+1))/diff(DsTs[[i]]$seqwk)) %>%
-    dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n()))
+    dplyr::mutate(seqwk = seq.int(from = 1, by = 1, length.out = n()),
+                  datex = seq.int(from = date("2020-04-08"), by = 7, length.out = n()))
 }
 
 #create a list for hierarchical clustering
 Dshc <- dplyr::bind_rows(DsTs, .id = "country") 
-Dshc <- Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqwk)
+Dshc <- Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqwk, -datex)
 Dshc <- as.list(Dshc)
 
 #====================================================================
@@ -75,7 +72,7 @@ cfg <- dtwclust::compare_clusterings_configs(
   preprocs = pdc_configs("preproc", hierarchical = list(zscore = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
   no.expand = c("window.size", "norm" ))
 
-evaluators <- cvi_evaluators(c("DBstar", "DB"))
+evaluators <- cvi_evaluators(c("DBstar"))
 comparison <- compare_clusterings(Dshc, 
                                   types = "hierarchical", 
                                   configs = cfg, 
@@ -85,24 +82,14 @@ comparison <- compare_clusterings(Dshc,
 
 #dataset for varying window size
 hc_wsize <- 
-  bind_rows(
+  #bind_rows(
   as.data.frame(
     (comparison$results$hierarchical[, c("distance", 
                                          "window.size_distance", 
                                          "DBstar",
                                          "k")])) %>%
     dplyr::rename("value" = "DBstar") %>%
-    dplyr::mutate(cvix = "Modified Davies-Bouldin"),
-  
-  as.data.frame(
-    (comparison$results$hierarchical[, c("distance", 
-                                         "window.size_distance", 
-                                         "DB",
-                                         "k")])) %>%
-    dplyr::rename("value" = "DB")%>%
-    dplyr::mutate(cvix = "Davies-Bouldin")) %>%
-  
-  dplyr::filter(cvix == "Davies-Bouldin") %>%
+    dplyr::mutate(cvix = "Modified Davies-Bouldin") %>%
   tidyr::pivot_wider(names_from = k, values_from = value) %>%
   dplyr::rename("k2" = `2`, "k3" = `3`, "k4" = `4`) %>%
   dplyr::mutate(Min_k2 = min(k2),
@@ -112,7 +99,6 @@ hc_wsize <-
                 Min_k4 = min(k4),
                 OptWs_k4 = window.size_distance[which.min(k4)])
   
-
 #plot varying window sizes and minimum distance to centroid by cluster validation index
 color <- c("k2" = "red", "k3" = "blue",  "k4" = "green")
 A <-
@@ -130,7 +116,6 @@ A <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
   labs(x = "Warping window size", y = "Distance to computed centroid", title = "")
 
-
 #hierarchical clustering with dynamic time-warping (DTW)
 dtw_hc <- dtwclust::tsclust(Dshc,
                             type = "hierarchical",
@@ -138,6 +123,7 @@ dtw_hc <- dtwclust::tsclust(Dshc,
                             preproc = zscore,
                             distance = "dtw_basic",
                             control = hierarchical_control(method = "average"),
+                            trace = TRUE,
                             args = tsclust_args(dist = list(window.size = 74L), cent = dba)
 )
 
@@ -157,7 +143,6 @@ B <-
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
   geom_point(data = labs, aes(x = x, y = 0, colour = Cluster), size = 4) +
   theme(legend.position = c(0.9,0.8))
-
 
 #plot prototypes
 dtwclustDS <-
