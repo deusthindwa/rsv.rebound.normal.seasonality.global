@@ -52,14 +52,11 @@ source("script/08_growth.R")
 #compute intensity
 source("script/09_intensity.R")
 
-#compute univariate regression models
-source("script/10_regression.R")
-
-#compute multivariate regression models
-source("script/11_multivariate.R")
+#compute regression models
+source("script/10_regress.R")
 
 #time series dynamic time warping and classification
-source("script/12_dynTimeWarp.R")
+source("script/11_dtw.R")
 
 #descriptive stats
-source("script/13_computeDesc.R")
+source("script/12_describe.R")
