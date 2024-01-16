@@ -172,7 +172,7 @@ rsv_desc %>%
   scale_y_continuous(trans = log10_trans()) +
   labs(x = "", y = "Population density (log10)", title = "(C)") +
   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-  theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   scale_fill_manual(values=c("#36454F", "#7CAE00"))
 
 D4 <-
@@ -188,45 +188,45 @@ rsv_desc %>%
   scale_y_continuous(trans = log10_trans()) +
   labs(x = "", y = "Population density (log10)", title = "(D)") +
   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-  theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  scale_fill_manual(values=c("#00BFC4", "#FFC133"))
-
-D5 <-
-rsv_desc %>%
-  dplyr::left_join(
-    stringency %>%
-      dplyr::group_by(country) %>%
-      dplyr::summarise(pop_age = mean(med_age)) %>%
-      dplyr::ungroup()) %>%
-  ggplot(aes(y = pop_age, fill = hemi)) + 
-  geom_boxplot(color = "black", size = 1) +
-  theme_bw(base_size = 14, base_family = "American typewriter") +
-  labs(x = "", y = "Population median age (years)", title = "(E)") +
-  theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-  theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
-  theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-  scale_fill_manual(values=c("#36454F", "#7CAE00"))
-
-D6 <-
-rsv_desc %>%
-  dplyr::left_join(
-    stringency %>%
-      dplyr::group_by(country) %>%
-      dplyr::summarise(pop_age = mean(med_age)) %>%
-      dplyr::ungroup()) %>%
-  ggplot(aes(y = pop_age, fill = clim)) + 
-  geom_boxplot(color = "black", size = 1) +
-  theme_bw(base_size = 14, base_family = "American typewriter") +
-  labs(x = "", y = "Population median age (years)", title = "(F)") +
-  theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-  theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   scale_fill_manual(values=c("#00BFC4", "#FFC133"))
+
+# D5 <-
+# rsv_desc %>%
+#   dplyr::left_join(
+#     stringency %>%
+#       dplyr::group_by(country) %>%
+#       dplyr::summarise(pop_age = mean(med_age)) %>%
+#       dplyr::ungroup()) %>%
+#   ggplot(aes(y = pop_age, fill = hemi)) + 
+#   geom_boxplot(color = "black", size = 1) +
+#   theme_bw(base_size = 14, base_family = "American typewriter") +
+#   labs(x = "", y = "Population median age (years)", title = "(E)") +
+#   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
+#   theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
+#   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+#   scale_fill_manual(values=c("#36454F", "#7CAE00"))
+# 
+# D6 <-
+# rsv_desc %>%
+#   dplyr::left_join(
+#     stringency %>%
+#       dplyr::group_by(country) %>%
+#       dplyr::summarise(pop_age = mean(med_age)) %>%
+#       dplyr::ungroup()) %>%
+#   ggplot(aes(y = pop_age, fill = clim)) + 
+#   geom_boxplot(color = "black", size = 1) +
+#   theme_bw(base_size = 14, base_family = "American typewriter") +
+#   labs(x = "", y = "Population median age (years)", title = "(F)") +
+#   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
+#   theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
+#   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+#   scale_fill_manual(values=c("#00BFC4", "#FFC133"))
 
 # combine all the plots
 ggsave(here("output", "sfig6_pred_distribution.png"),
-       plot = (D1 | D3 | D5)/(D2 | D4 | D6),
-       width = 20, height = 14, unit="in", dpi = 300)
+       plot = (D1 | D3)/(D2 | D4),
+       width = 16, height = 14, unit="in", dpi = 300)
 
 #====================================================================
 #COMBINING EPIDEMIC ONSET AND INTENSITY ON THE SAME PLOT
@@ -290,6 +290,10 @@ ggplot() +
   scale_size_continuous(limits = c(0.01, 10), range = c(1,10)) + 
   geom_segment(data = OnsetIntens4, aes(x = fdate, y = wave, xend = fdatex, yend = wavex, colour = country), stat = "identity") +
   geom_segment(data = OnsetIntens4 %>% dplyr::filter(!is.na(fdatexx)), aes(x = fdatex, y = wavex, xend = fdatexx, yend = wavexx, colour = country), stat = "identity") +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2021-03-01'), xmax = date('2021-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2022-03-01'), xmax = date('2022-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2021-09-01'), xmax = date('2021-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2022-09-01'), xmax = date('2022-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
   geom_text(data = OnsetIntens4, aes(x = fdate, y = wave, label = str_sub(country, 1,2)), size = 4, angle = "45", vjust = -0.5, hjust = 1.5, fontface = "bold", position = position_dodge(width = 1)) +
   scale_x_date(breaks = c((date(c("2020-06-01", "2020-09-01", "2020-12-01", "2021-03-01", "2021-06-01", "2021-09-01", "2021-12-01", "2022-03-01", "2022-06-01", "2022-09-01", "2022-12-01")))),
                limits = c((date(c("2020-06-01", "2023-01-01")))),
@@ -303,6 +307,6 @@ ggplot() +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
 #plot the onset-intensity relationship
-ggsave(here("output", "sfig12_onset_intensity.png"),
+ggsave(here("output", "fig4_onset_intensity.png"),
        plot = (B),
        width = 18, height = 10, unit="in", dpi = 300)

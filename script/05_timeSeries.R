@@ -34,8 +34,9 @@ for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan"
 A <-
 bind_rows(X) %>%
   ggplot(aes(x = date, y = cases)) +
-  geom_line(size = 1.2) + 
-  geom_point(aes(x = newDate, y = newCases), color = "red", size = 2.5) +
+  geom_line(size = 2) + 
+  geom_vline(xintercept = date('2020-04-12'), linetype="dashed", color = "red", size = 1.4) +
+  #geom_point(aes(x = newDate, y = newCases), color = "red", size = 2.5) +
   theme_bw(base_size = 11, base_family = "Lato", base_line_size = 1.5) + 
   labs(title = "", x = "Reporting date", y = "") +
   guides(color = guide_legend(title = "")) +
@@ -51,7 +52,7 @@ bind_rows(X) %>%
 #combined plots and saving
 ggsave(here("output", "fig2_tsdyn.png"),
        plot = (A),
-       width = 20, height = 17, unit="in", dpi = 300)
+       width = 25, height = 20, unit="in", dpi = 300)
 
 #====================================================================
 #WEEKLY DYNAMICS OF RSV

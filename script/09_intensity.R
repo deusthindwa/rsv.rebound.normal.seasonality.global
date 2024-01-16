@@ -106,7 +106,6 @@ intense2 <-
    dplyr::select(country, intcat, year, seqwk, seqwk2, fderiv, intensity, date)
  
  #intense2x <- intense2 #peak2x dataset used for regression
-
 intense1 <- 
   dplyr::left_join(tsDS, X) %>%
   dplyr::left_join(intense2 %>% dplyr::select(everything(), -year, -date))
@@ -203,7 +202,7 @@ intense2 <-
   data_frame() %>%
   ungroup()
 
-#1)intensity by overall status (circular correlation coefficient)
+#1)intensity by overall status (pearson correlation coefficient)
 intense_overall <-
   left_join(
     intense2 %>%

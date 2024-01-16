@@ -1,4 +1,4 @@
- #Authors: Deus & Dan
+#Authors: Deus & Dan
 #Date: 01/03/2023
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
@@ -20,7 +20,7 @@ climate <-
 
 #time to first wave onset from 2020 COVID-19 suppression in April
 DSonset1 <-
-onset2x %>%
+  onset2x %>%
   dplyr::left_join(climate %>% dplyr::select(country, clim, outSeasW1)) %>%
   dplyr::left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>%
   dplyr::filter(wave == "wave1") %>%
@@ -45,7 +45,7 @@ DSonset1 <-
 
 #create a variable that shows when event happen
 DSonset1 <-
-DSonset1 %>%
+  DSonset1 %>%
   dplyr::mutate(event = ifelse(time+1 == lead(time), 0L, 1L),
                 event = ifelse(is.na(event), 1L, event)) %>%
   dplyr::select(country, event, everything())
@@ -212,8 +212,9 @@ DSintense1 <-
   dplyr::mutate(fdate = date(fdate)) %>%
   dplyr::left_join(climate %>% dplyr::select(country, clim, outSeasW1)) %>%
   dplyr::left_join(rsv_all %>% dplyr::select(country, hemi) %>% distinct()) %>% 
+  dplyr::mutate(fdate = if_else(fdate == date('2019-10-27'), date('2020-07-12'), fdate)) %>% #reset erroneous date for RSA
   dplyr::left_join(stringency %>% dplyr::mutate(fdate = date(fdate)))
-  
+
 #================================================================
 # CREATE DATASET FOR INTENSITY DURING SECOND WAVE
 #================================================================
@@ -279,8 +280,8 @@ DSonset1 <-
          clim2 = as.factor(clim))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)")) {
-  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)")) {
+  X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), cluster = country, data = DSonset1, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X1 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "First wave onset timing") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
 #onset timing during second wave from first wave
@@ -291,7 +292,7 @@ DSonset2 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)", "outSeasW1x", "scale(intenseW1)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X2 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave onset timing") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -302,7 +303,7 @@ DSpeak1 <-
          clim2 = as.factor(clim))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)")) {
   X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak1, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X3 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "First wave peak timing") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -314,7 +315,7 @@ DSpeak2 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)", "outSeasW1x", "scale(intenseW1)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   X[[i]] <- print(tidy(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000)), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X4 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave peak timing") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -326,7 +327,7 @@ DSgrowth1 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)")) {
   X[[i]] <- print(tidy(lm(as.formula(paste0("grate ~", i)), data = DSgrowth1), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X5 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "First wave growth rate") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -338,7 +339,7 @@ DSgrowth2 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)", "outSeasW1x", "scale(intenseW1)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   X[[i]] <- print(tidy(lm(as.formula(paste0("grate ~", i)), data = DSgrowth2), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X6 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave growth rate") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -350,7 +351,7 @@ DSintense1 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)")) {
   X[[i]] <- print(tidy(lm(as.formula(paste0("intensity ~", i)), data = DSintense1), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X7 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "First wave intensity") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -362,7 +363,7 @@ DSintense2 <-
          outSeasW1x = as.factor(outSeasW1))
 
 X <- list()
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)", "outSeasW1x", "scale(intenseW1)")) {
+for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   X[[i]] <- print(tidy(lm(as.formula(paste0("intensity ~", i)), data = DSintense2), exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95))}
 X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave intensity") %>% dplyr::filter(term != "(Intercept)") %>% dplyr::select(term, estimate, conf.low, conf.high, p.value, ds)
 
@@ -370,42 +371,23 @@ X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave intensity") %>% dp
 # MULTIVARIATE REGRESSION ANALYSES
 #================================================================
 
-#onset timing during first wave (only statistically significant results)
-for (i in c("hemi2", "scale(med_age)")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000))))
-}
-for (i in c("hemi2 + scale(med_age)")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset1, control = coxph.control(iter.max = 1000))))
-}
-
-Y1 = coxph(Surv(time, event) ~  hemi2 + scale(med_age), 
-           data = DSonset1, 
-           control = coxph.control(iter.max = 1000))
-Y1 <- 
-  tidy(Y1, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% 
-  dplyr::select(term, estimate, conf.low, conf.high, p.value) %>% 
-  dplyr::mutate(ds = "First wave onset timing")
-
 #onset timing during second wave from first wave
-for (i in c("hemi2", "scale(strin_indxL)", "scale(pop_dens)", "scale(med_age)", "outSeasW1x", "scale(intenseW1)")) {
+for (i in c("hemi2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + hemi2", "scale(strin_indxL) + scale(pop_dens)", "scale(strin_indxL) + scale(med_age)", "scale(strin_indxL) + outSeasW1x", "scale(strin_indxL) + scale(intenseW1)")) {
+for (i in c("scale(strin_indxL) + hemi2", "scale(strin_indxL) + scale(pop_dens)", "scale(strin_indxL) + outSeasW1x", "scale(strin_indxL) + scale(intenseW1)")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens)", "scale(strin_indxL) + scale(intenseW1) + scale(med_age)", "scale(strin_indxL) + scale(intenseW1) + outSeasW1x")) {
+for (i in c("scale(strin_indxL) + scale(intenseW1) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens)", "scale(strin_indxL) + scale(intenseW1) + outSeasW1x")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + scale(med_age)", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + outSeasW1x")) {
+for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + outSeasW1x")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + scale(med_age) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + scale(med_age) + outSeasW1x")) {
+for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + hemi2 + outSeasW1x" )) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + scale(med_age) + outSeasW1x + hemi2")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
-}
-Y2 = coxph(Surv(time, event) ~  hemi2 + scale(strin_indxL) + scale(pop_dens) + scale(med_age) + outSeasW1x + scale(intenseW1), 
+Y2 = coxph(Surv(time, event) ~  hemi2 + scale(strin_indxL) + scale(pop_dens) + scale(intenseW1), 
            data = DSonset2, 
            control = coxph.control(iter.max = 1000))
 Y2 <- 
@@ -413,29 +395,27 @@ Y2 <-
   dplyr::select(term, estimate, conf.low, conf.high, p.value) %>% 
   dplyr::mutate(ds = "Second wave onset timing")
 
-#peak timing during second wave from first wave
-for (i in c("hemi2", "clim2", "scale(strin_indxL)", "scale(med_age)")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
-}
-for (i in c("scale(strin_indxL) + hemi2", "scale(strin_indxL) + clim2", "scale(strin_indxL) + scale(med_age)")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
-}
-for (i in c("scale(strin_indxL) + scale(med_age) + hemi2", "scale(strin_indxL) + scale(med_age) + clim2")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
-}
-for (i in c("scale(strin_indxL) + scale(med_age) + hemi2 + clim2")) {
-  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
-}
 
-Y3 = coxph(Surv(time, event) ~ hemi2 + scale(strin_indxL) + scale(med_age), 
-           data = DSpeak2, 
+Y3 = coxph(Surv(time, event) ~  hemi2 + scale(strin_indxL) + scale(pop_dens) + scale(intenseW1) + outSeasW1x, #adjust for out of season seperately
+           data = DSonset2, 
            control = coxph.control(iter.max = 1000))
 Y3 <- 
   tidy(Y3, exponentiate = TRUE, conf.int = TRUE, conf.level = 0.95) %>% 
   dplyr::select(term, estimate, conf.low, conf.high, p.value) %>% 
-  dplyr::mutate(ds = "Second wave peak timing")
+  dplyr::mutate(ds = "Second wave onset timing")
 
-Y4 = coxph(Surv(time, event) ~ hemi2 + clim2 + scale(strin_indxL) + scale(med_age), 
+#peak timing during second wave from first wave
+for (i in c("hemi2", "clim2", "scale(strin_indxL)")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
+}
+for (i in c("scale(strin_indxL) + hemi2", "scale(strin_indxL) + clim2")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
+}
+for (i in c("scale(strin_indxL) + hemi2 + clim2")) {
+  print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSpeak2, control = coxph.control(iter.max = 1000))))
+}
+
+Y4 = coxph(Surv(time, event) ~ hemi2 + clim2 + scale(strin_indxL), 
            data = DSpeak2, 
            control = coxph.control(iter.max = 1000))
 Y4 <- 
