@@ -206,12 +206,19 @@ intense2 <-
 intense_overall <-
   left_join(
     intense2 %>%
-    dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                  w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
+                  w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
+                  w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                  w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+    
     intense2 %>%
     dplyr::select(country, precov, wave3) %>%
     dplyr::filter(!is.na(wave3)) %>%
-    dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3)))) %>%
+    dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
+                  w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2))) %>%
   
   dplyr::mutate(cat = "Overall")
 
@@ -226,26 +233,36 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
     left_join(
       intense_hemi %>%
         dplyr::filter(hemi == i) %>%
-        dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                      w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+        dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
+                      w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
+                      w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                      w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+      
       intense_hemi %>%
         dplyr::filter(hemi == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3))))
+        dplyr::add_row(country="Anonymous", precov=2.87,wave3=2.74) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
+                      w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2)))
 }
 
 intense_hemi <- 
   bind_rows(scatterXY, .id = "id") %>%
   dplyr::rename("cat" = "id") %>%
   dplyr::select(-hemi)
+  
 
 I1 <-
   dplyr::bind_rows(intense_overall, intense_hemi) %>%
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 8, y = 0.5, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 0.05, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
@@ -260,7 +277,8 @@ I2 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 8, y = 0.5, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 0.05, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
@@ -275,7 +293,8 @@ I3 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = dplyr::bind_rows(intense_overall, intense_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 0.5, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = dplyr::bind_rows(intense_overall, intense_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = dplyr::bind_rows(intense_overall, intense_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 0.05, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
@@ -300,13 +319,22 @@ for (i in c("Tropical", "Temperate")) {
     left_join(
       intense_clim %>%
         dplyr::filter(clim == i) %>%
-        dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                      w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+        dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
+                      w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
+                      w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                      w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+      
       intense_clim %>%
         dplyr::filter(clim == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3))))
+        dplyr::add_row(country="Anonymous", precov=4.86,wave3=3.37) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
+                      w3p = round((stats::cor.test(wave3, precov, method = c("pearson"))$p.value[1]), digits = 2),
+                      w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2)))
 }
 intense_clim <- 
   bind_rows(scatterXY, .id = "id") %>%
@@ -319,7 +347,8 @@ I4 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 8, y = 0.5, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 0.05, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
@@ -334,7 +363,8 @@ I5 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 8, y = 0.5, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 8, y = 0.05, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
@@ -349,7 +379,8 @@ I6 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = intense_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 0.5, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = intense_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = intense_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 8, y = 0.05, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +

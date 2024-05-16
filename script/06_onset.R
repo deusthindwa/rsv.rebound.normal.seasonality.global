@@ -15,9 +15,10 @@ X <-
                                "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) %>%
   dplyr::arrange(country, yr, wk, cases) %>%
   dplyr::group_by(country) %>%
-  dplyr::mutate(seqwk = seq.int(from = week(date), by = 1, length.out = n())) %>%
+  dplyr::mutate(seqwk = seq.int(from = week(date), by = 1, length.out = n()),
+                time = seq.int(from = 1, by = 1, length.out = n())) %>%
   dplyr::ungroup() %>%
-  dplyr::select(date, seqwk, cases, country) %>%
+  dplyr::select(date, time, seqwk, cases, country) %>%
   base::split(list(.$country))
 
 #delete empty country data frames from list X
@@ -30,22 +31,43 @@ deriv1 <- list()
 deriv2 <- list()
 onset2 <- list()
 
+# estTimes <- list()
+# estCases <- list()
+
 #functions to numerically calculate the second derivative
 deriv <- function(x, y) diff(y) / diff(x) 
 middle_pts <- function(x) x[-1] - diff(x) / 2 
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 25),
+  Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = 25),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
                       data = X[[i]])
 }
 
+# #equal time interval estimation
+# eps = 0.5
+# for (i in names(X)) {
+#   estTimes[[i]] = data.frame(time=seq(min(X[[i]]$time) - 0.5, max(X[[i]]$time) + 0.5 - eps, by=eps))
+# }
+# 
+# #estimate incidence
+# for (i in names(X)){
+#   estCases[[i]] = pspline.estimate.timeseries(
+#     Gmodels[[i]], 
+#     estTimes[[i]],
+#     pspline.outbreak.cases,
+#     samples = 100, 
+#     level=.95
+#   )
+# }
+
 #iterate for each country, extract fitted values, compute 1st and 2nd derivatives
 for (i in names(X)){
   tsDS[[i]] = data.frame(fitcases = Gmodels[[i]]$fitted.values) %>% #fitted values
+  #tsDS[[i]] = data.frame(fitcases = estCases[[i]]$cases.median) %>% #fitted values
     mutate(seqwk = seq.int(from = X[[i]]$seqwk[1], by = 1, length.out = n()),
            date = seq.int(from = X[[i]]$date[1], by = 7, length.out = n()))
   
@@ -119,7 +141,8 @@ onset1 <-
 #ggplot of RSV time series AND onset values
 O0 <-
   ggplot() +
-  geom_line(data = onset1, aes(x = seqwk, y = fitcases), size = 1.5, color = "black") + # GAM fitted curve
+  geom_point(data = onset1, aes(x = seqwk, y = cases), color = "gray", shape = 1, size = 2,  stroke = 2) + #onset times
+  geom_line(data = onset1, aes(x = seqwk, y = fitcases), size = 1.5, color = "black") + #GAM fitted curve
   geom_point(data = onset1, aes(x = seqwk2, y = fitcases), color = "blue", shape = 4, size = 2,  stroke = 2) + #onset times
   geom_vline(xintercept = 171, linetype = "dotted", color = "black", size = 1.5) +
   facet_wrap(.~ country, scale = "free_y", ncol=4) +
@@ -128,7 +151,8 @@ O0 <-
   scale_x_continuous(breaks = seq(1, 325, 52), limits = c(0, 325)) +
   labs(x = "Reporting weeks between 2017 and 2023", y = "GAM fitted RSV cases and estimated outbreak onset", title ="RSV ONSET TIMING") +
   theme(legend.position = "bottom", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  
 
 ggsave(here("output", "sfig2_onset.png"),
        plot = O0,
@@ -157,7 +181,7 @@ onset2 <-
 onset2 %>%
   dplyr::select(country, wave, loc) %>%
   dplyr::group_by(country, wave) %>%
-  dplyr::mutate(loc = (circular::mean.circular((2*pi/52)*(loc-1))/(2*pi/52) + 52) %% 52) %>% #52 weeks per year (circular)
+  #dplyr::mutate(loc = (circular::mean.circular((2*pi/52)*(loc-1))/(2*pi/52) + 52) %% 52) %>% #52 weeks per year (circular)
   dplyr::mutate(row = row_number()) %>%
   tidyr::pivot_wider(names_from = wave, values_from = loc) %>%
   dplyr::select(everything(), -row) %>%
@@ -169,14 +193,29 @@ onset2 %>%
                 wave1 =  circular(wave1, units = "degrees", template = "geographics", modulo = "pi"),
                 wave2 = circular(wave2, units = "degrees", template = "geographics", modulo = "pi"),
                 wave3 = circular(wave3, units = "degrees", template = "geographics", modulo = "pi"))
-  
+
+#bootstraping dataset
+onsetb <- 
+  onset2 %>% 
+  dplyr::left_join(rsv_all %>% select(hemi, country) %>% distinct()) %>%
+  dplyr::left_join(climate %>% select(country, clim) %>% distinct())
+
 #1)onset timing by overall status (circular correlation coefficient)
 onset_overall <-
   onset2 %>%
-  dplyr::mutate(w1corr = abs(round((circular::cor.circular(precov, wave1))[1], digits = 3)),
-                w2corr = abs(round((circular::cor.circular(precov, wave2))[1], digits = 3)),
-                w3corr = abs(round((circular::cor.circular(precov, wave3))[1], digits = 3)),
-                cat = "Overall")
+  dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
+                w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
+                w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
+
+                w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                cat = "Overall") %>%
+  dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
 
 #2)onset timing by hemisphere (circular correlation coefficient)
 onset_hemi <-
@@ -184,25 +223,35 @@ onset_hemi <-
   inner_join(rsv_all %>% dplyr::select(country, hemi) %>% dplyr::distinct())
 
 scatterXY <- list()
-for (i in c("Northern hemisphere", "Southern hemisphere")) {
-  scatterXY[[i]] =
+for (j in c("Northern hemisphere", "Southern hemisphere")) {
+  scatterXY[[j]] =
     onset_hemi %>%
-    dplyr::filter(hemi == i) %>%
-    dplyr::mutate(w1corr = abs(round((circular::cor.circular(precov, wave1))[1], digits = 3)),
-                  w2corr = abs(round((circular::cor.circular(precov, wave2))[1], digits = 3)),
-                  w3corr = abs(round((circular::cor.circular(precov, wave3))[1], digits = 3)))
+    dplyr::filter(hemi == j) %>%
+    dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
+                  w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
+                  w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
+                  
+                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2))
 }
 onset_hemi <- 
   bind_rows(scatterXY, .id = "id") %>%
   dplyr::rename("cat" = "id") %>%
-  dplyr::select(-hemi)
+  dplyr::select(-hemi) %>%
+  dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
 
 O1 <-
   dplyr::bind_rows(onset_overall, onset_hemi) %>%
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 6, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 2, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
@@ -217,7 +266,8 @@ O2 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 6, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 2, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
@@ -232,7 +282,8 @@ O3 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 5, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 6, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 2, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
@@ -256,26 +307,36 @@ onset_clim <-
   inner_join(climate %>% dplyr::select(country, clim) %>% dplyr::distinct())
 
 scatterXY <- list()
-for (i in c("Tropical", "Temperate")) {
-  scatterXY[[i]] =
+for (j in c("Tropical", "Temperate")) {
+  scatterXY[[j]] =
     onset_clim %>%
-    dplyr::filter(clim == i) %>%
-    dplyr::mutate(w1corr = abs(round((circular::cor.circular(precov, wave1))[1], digits = 3)),
-                  w2corr = abs(round((circular::cor.circular(precov, wave2))[1], digits = 3)),
-                  w3corr = abs(round((circular::cor.circular(precov, wave3))[1], digits = 3)))
+    dplyr::filter(clim == j) %>%
+    dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
+                  w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
+                  w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
+
+                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
+                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2))
 }
 onset_clim <- 
   bind_rows(scatterXY, .id = "id") %>%
   dplyr::rename("cat" = "id") %>%
   dplyr::select(-clim) %>%
-  dplyr::mutate(cat = ifelse(cat == "Tropical", "(Sub)tropical", cat))
+  dplyr::mutate(cat = ifelse(cat == "Tropical", "(Sub)tropical", cat)) %>%
+  dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
 
 O4 <-
   onset_clim %>%
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 4, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 1, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
@@ -290,7 +351,8 @@ O5 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 4, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 1, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
@@ -305,7 +367,8 @@ O6 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 42, y = 3, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 4, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 42, y = 1, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
   scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +

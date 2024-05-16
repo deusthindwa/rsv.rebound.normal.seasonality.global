@@ -162,12 +162,19 @@ growth2 <-
 growth_overall <-
   left_join(
   growth2 %>%
-    dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                  w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
+                  w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
+                  w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                  w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+  
   growth2 %>%
     dplyr::select(country, precov, wave3) %>%
     dplyr::filter(!is.na(wave3)) %>%
-    dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3)))) %>%
+    dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
+                  w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                  w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2))) %>%
   
   dplyr::mutate(cat = "Overall")
 
@@ -182,13 +189,21 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
     left_join(
       growth_hemi %>%
         dplyr::filter(hemi == i) %>%
-        dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                      w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+        dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2)),
+                      w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2)),
+                      w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                      w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+      
       growth_hemi %>%
         dplyr::filter(hemi == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3))))
+        dplyr::add_row(country="Anonymous", precov=0,wave3=0) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
+                      w3L = round((stats::cor.test(wave3, precov, method = c("pearson"), exact = TRUE)$conf.int[1]), digits = 2),
+                      w3U = round((stats::cor.test(wave3, precov, method = c("pearson"), exact = TRUE)$conf.int[2]), digits = 2)))
 }
 
 growth_hemi <- 
@@ -201,7 +216,8 @@ G1 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.2, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.05, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -216,7 +232,8 @@ G2 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.2, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.05, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -231,7 +248,8 @@ G3 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = dplyr::bind_rows(growth_overall, growth_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = dplyr::bind_rows(growth_overall, growth_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.2, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = dplyr::bind_rows(growth_overall, growth_hemi) %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.05, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -256,13 +274,21 @@ for (i in c("Tropical", "Temperate")) {
     left_join(
       growth_clim %>%
         dplyr::filter(clim == i) %>%
-        dplyr::mutate(w1corr = abs(round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 3)),
-                      w2corr = abs(round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 3))),
+        dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
+                      w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
+                      w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
+                      w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
+      
       growth_clim %>%
         dplyr::filter(clim == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::mutate(w3corr = abs(round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3))))
+        dplyr::add_row(country="Anonymous", precov=0.76,wave3=0.26) %>% #95%CI only computed with atleast 4 complete pairs (values from countries means)
+        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3),
+                      w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
+                      w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2)))
 }
 growth_clim <- 
   bind_rows(scatterXY, .id = "id") %>%
@@ -275,7 +301,8 @@ G4 <-
   ggplot(aes(x = precov, y = wave1, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.2, label = paste0("r = ", w1corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.05, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -290,7 +317,8 @@ G5 <-
   ggplot(aes(x = precov, y = wave2, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(aes(x = 1.6, y = 0.1, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.2, label = paste0("r = ", w2corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(aes(x = 1.6, y = 0.05, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
@@ -305,7 +333,8 @@ G6 <-
   ggplot(aes(x = precov, y = wave3, color = country), position = position_dodge(width = 0.5)) +
   geom_point(size = 4, position = position_dodge(width = 0.5), stroke = 2, shape = 4) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed", size = 0.5) +
-  geom_text(data = growth_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.1, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = growth_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.2, label = paste0("r = ", w3corr)), color = "black", size = 6, fontface = "bold") +
+  geom_text(data = growth_clim %>% dplyr::filter(!is.na(w3corr)), aes(x = 1.6, y = 0.05, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
   scale_x_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +

@@ -50,6 +50,17 @@ rsvds <-
 # view structure of data
 utils::str(rsvds)
 
+#check eligible countries for analysis
+rsvds %>% mutate(year = year(date)) %>% dplyr::filter(year>=2017 & year <=2019) %>% group_by(country) %>% tally() 
+
+#remove countries with avg <100 annual cases
+rsvds %>% mutate(year = year(date)) %>% dplyr::filter(year>=2017 & year <=2019) %>% group_by(country) %>% tally() %>% dplyr::filter(n>=300)
+
+#remove countries with missing post-pandemic data
+left_join(
+rsvds %>% mutate(year = year(date)) %>% dplyr::filter(year>=2017 & year <=2019) %>% group_by(country) %>% tally() %>% dplyr::filter(n>=300),#>100 avg pre-pand
+rsvds %>% mutate(year = year(date)) %>% dplyr::filter(year>=2020 & year <=2023) %>% group_by(country) %>% tally() %>% dplyr::filter(n>=400)) #>100 avg post-pand
+
  #====================================================================
 
 #filter to only have these countries included from Africa with somewhat case complete data from 2017

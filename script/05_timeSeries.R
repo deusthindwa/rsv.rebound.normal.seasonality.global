@@ -20,10 +20,8 @@ country_ts <-
 X <- list()
 
 #time series dynamics for all included countries
-for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan", "Paraguay", "Peru", "South Africa",
-            "Brazil", "Canada", "Denmark", "France", "Germany", "Hungary", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")) {
-
-  X[[i]] <-    
+for (i in c("Argentina", "Australia",  "Paraguay", "Peru", "South Africa", "Brazil")){
+  X[[i]] <- 
     country_ts %>%
     dplyr::filter(country == i) %>%
     dplyr::mutate(newDate = max(date, na.rm = TRUE),
@@ -31,11 +29,19 @@ for (i in c("Argentina", "Australia", "Colombia", "Costa Rica", "India", "Japan"
                   hemi = "Southern Hemisphere")
 }
 
+#time series dynamics for all included countries
+for (i in c("Colombia", "Costa Rica", "India", "Canada", "Denmark", "France", "Germany", "Hungary", "Japan", "Iceland", "Ireland", "Mexico", "Mongolia", "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States")){
+  X[[i]] <- 
+    country_ts %>%
+    dplyr::filter(country == i) %>%
+    dplyr::mutate(newDate = max(date, na.rm = TRUE),
+                  newCases = cases[which.max(date == newDate)],
+                  hemi = "Northern Hemisphere")
+} 
+
 A <-
 bind_rows(X) %>%
   ggplot(aes(x = date, y = cases)) +
-  geom_line(size = 2) + 
-  geom_vline(xintercept = date('2020-04-12'), linetype="dashed", color = "red", size = 1.4) +
   #geom_point(aes(x = newDate, y = newCases), color = "red", size = 2.5) +
   theme_bw(base_size = 11, base_family = "Lato", base_line_size = 1.5) + 
   labs(title = "", x = "Reporting date", y = "") +
@@ -46,7 +52,24 @@ bind_rows(X) %>%
   theme_bw(base_size = 15, base_family = 'Lato') +
   theme(axis.text.x = element_text(angle = 30, vjust = 0.5, hjust = 0.3)) +
   theme(legend.position = "bottom", legend.text=element_text(size = 13), strip.text.x = element_text(size = 16)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2017-02-01'), xmax = date('2017-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2018-02-01'), xmax = date('2018-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2019-02-01'), xmax = date('2019-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2020-02-01'), xmax = date('2020-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2021-02-01'), xmax = date('2021-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2022-02-01'), xmax = date('2022-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Southern Hemisphere"), aes(xmin = date('2023-02-01'), xmax = date('2023-07-30'), ymin = 0, ymax = Inf), fill = "gray95") +
+  
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2017-10-01'), xmax = date('2018-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2018-10-01'), xmax = date('2019-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2019-10-01'), xmax = date('2020-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2020-10-01'), xmax = date('2021-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2021-10-01'), xmax = date('2022-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2022-10-01'), xmax = date('2023-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_rect(data = bind_rows(X) %>% dplyr::filter(hemi == "Northern Hemisphere"), aes(xmin = date('2023-10-01'), xmax = date('2024-03-28'), ymin = 0, ymax = Inf), fill = "gray95") +
+  geom_line(size = 2) + 
+  geom_vline(xintercept = date('2020-04-12'), linetype="dashed", color = "red", size = 1.4)
   
 
 #combined plots and saving

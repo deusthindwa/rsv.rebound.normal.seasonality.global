@@ -292,6 +292,7 @@ ggplot() +
   geom_segment(data = OnsetIntens4 %>% dplyr::filter(!is.na(fdatexx)), aes(x = fdatex, y = wavex, xend = fdatexx, yend = wavexx, colour = country), stat = "identity") +
   geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2021-03-01'), xmax = date('2021-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
   geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2022-03-01'), xmax = date('2022-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2020-09-01'), xmax = date('2020-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
   geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2021-09-01'), xmax = date('2021-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
   geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2022-09-01'), xmax = date('2022-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
   geom_text(data = OnsetIntens4, aes(x = fdate, y = wave, label = str_sub(country, 1,2)), size = 4, angle = "45", vjust = -0.5, hjust = 1.5, fontface = "bold", position = position_dodge(width = 1)) +

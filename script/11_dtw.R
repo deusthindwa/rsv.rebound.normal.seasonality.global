@@ -54,7 +54,7 @@ for (i in names(X)){
 }
 
 #create a list for hierarchical clustering
-Dshc <- dplyr::bind_rows(DsTs, .id = "country") 
+Dshc <- dplyr::bind_rows(DsTs, .id = "country")
 Dshc <- Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqwk, -datex)
 Dshc <- as.list(Dshc)
 
