@@ -246,8 +246,8 @@ OnsetIntens1 <-
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "first wave") %>% 
   left_join(OnsetIntens) %>%
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
 OnsetIntens2 <- 
@@ -255,8 +255,8 @@ OnsetIntens2 <-
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "second wave") %>% 
   left_join(OnsetIntens) %>%
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
 OnsetIntens3 <- 
@@ -266,8 +266,8 @@ OnsetIntens3 <-
   dplyr::filter(wave == "wave3") %>% 
   dplyr::mutate(wave = "third wave")) %>% 
 
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia"), "Northern hemisphere",
-                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern hemisphere", "Southern hemisphere"))) %>%
+  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+                         if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, date, intens1, intens2, intens3, hemix, wave)
 
 
@@ -290,18 +290,19 @@ ggplot() +
   scale_size_continuous(limits = c(0.01, 10), range = c(1,10)) + 
   geom_segment(data = OnsetIntens4, aes(x = fdate, y = wave, xend = fdatex, yend = wavex, colour = country), stat = "identity") +
   geom_segment(data = OnsetIntens4 %>% dplyr::filter(!is.na(fdatexx)), aes(x = fdatex, y = wavex, xend = fdatexx, yend = wavexx, colour = country), stat = "identity") +
-  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2021-03-01'), xmax = date('2021-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
-  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern hemisphere"), aes(xmin = date('2022-03-01'), xmax = date('2022-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
-  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2020-09-01'), xmax = date('2020-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
-  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2021-09-01'), xmax = date('2021-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
-  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern hemisphere"), aes(xmin = date('2022-09-01'), xmax = date('2022-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern Hemisphere"), aes(xmin = date('2020-03-01'), xmax = date('2020-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern Hemisphere"), aes(xmin = date('2021-03-01'), xmax = date('2021-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Southern Hemisphere"), aes(xmin = date('2022-03-01'), xmax = date('2022-06-30'), ymin = 0, ymax = Inf), alpha = 0.04) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern Hemisphere"), aes(xmin = date('2020-09-01'), xmax = date('2020-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern Hemisphere"), aes(xmin = date('2021-09-01'), xmax = date('2021-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
+  geom_rect(data = dplyr::filter(OnsetIntens1, hemix == "Northern Hemisphere"), aes(xmin = date('2022-09-01'), xmax = date('2022-12-31'), ymin = 0, ymax = Inf), alpha = 0.01) +
   geom_text(data = OnsetIntens4, aes(x = fdate, y = wave, label = str_sub(country, 1,2)), size = 4, angle = "45", vjust = -0.5, hjust = 1.5, fontface = "bold", position = position_dodge(width = 1)) +
-  scale_x_date(breaks = c((date(c("2020-06-01", "2020-09-01", "2020-12-01", "2021-03-01", "2021-06-01", "2021-09-01", "2021-12-01", "2022-03-01", "2022-06-01", "2022-09-01", "2022-12-01")))),
-               limits = c((date(c("2020-06-01", "2023-01-01")))),
+  scale_x_date(breaks = c((date(c("2020-03-01", "2020-06-01", "2020-09-01", "2020-12-01", "2021-03-01", "2021-06-01", "2021-09-01", "2021-12-01", "2022-03-01", "2022-06-01", "2022-09-01", "2022-12-01")))),
+               limits = c((date(c("2020-03-01", "2023-01-01")))),
                date_labels = "%m-%Y") +
   facet_grid(hemix~.) +
   theme_bw(base_size = 14, base_family = "Amrican Typewriter") + 
-  labs(title = "ONSET-INTENSITY RELATIONSHIP", x = "Epidemic onset date", y = "RSV epidemic waves following COVID-19 suppression") +
+  labs(title = "", x = "Epidemic onset date", y = "RSV epidemic waves following COVID-19 suppression") +
   theme(legend.text = element_text(size = 10), legend.position = "right", legend.title = element_text(size = 11)) +
   guides(size = guide_legend(title = "Intensity"), color = guide_legend(title = "Country")) +
   theme(strip.text.x = element_text(size = 0), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray80")) +
@@ -311,3 +312,34 @@ ggplot() +
 ggsave(here("output", "fig4_onset_intensity.png"),
        plot = (B),
        width = 18, height = 10, unit="in", dpi = 300)
+
+#====================================================================
+#X-Y PLOT OF EPIDEMIC ONSET AND INTENSITY ON THE SAME PLOT
+#====================================================================
+
+A <-
+  bind_rows(
+    OnsetIntens4 %>% select(country, fdate, hemix, intens1) %>% dplyr::rename("intens" = "intens1") %>% dplyr::mutate(wave = "first wave"),
+    OnsetIntens4 %>% select(country, fdatex, hemix, intens2) %>% dplyr::rename("intens" = "intens2", "fdate" = "fdatex")  %>% dplyr::mutate(wave = "second wave"),
+    OnsetIntens4 %>% select(country, fdatexx, hemix, intens3) %>% dplyr::rename("intens" = "intens3",  "fdate" = "fdatexx")  %>% dplyr::mutate(wave = "third wave", fdate = date(fdate))) %>%
+
+  ggplot() +
+  geom_point(aes(x = fdate, y = intens, color = country, size = intens), shape = 21, stroke = 2, alpha = 0.75,  stat = "identity") +
+  scale_x_date(breaks = c((date(c("2020-06-01", "2020-12-01", "2021-06-01", "2021-12-01", "2022-06-01", "2022-12-01")))),
+               limits = c((date(c("2020-06-01", "2023-01-01")))),
+               date_labels = "%m-%Y") +
+  #scale_x_date(date_labels = "%m-%Y") +
+  facet_grid(hemix~wave, scales = "free_x") +
+  theme_bw(base_size = 14, base_family = "Amrican Typewriter") + 
+  labs(title = "", x = "Epidemic onset date", y = "RSV Intensity") +
+  theme(legend.text = element_text(size = 10), legend.position = "right", legend.title = element_text(size = 11)) +
+  guides(size = "none", color = guide_legend(title = "Country")) +
+  theme(strip.text.x = element_text(size = 16), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray80")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+
+#plot the onset-intensity relationship
+ggsave(here("output", "sfig4_onset_intensity.png"),
+       plot = (A),
+       width = 18, height = 9, unit="in", dpi = 300)
+
