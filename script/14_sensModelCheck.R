@@ -29,10 +29,10 @@ Gmodels <- list()
 ModelCheck <- data.frame(country = rep(NA, 728), nknots = rep(NA, 728), aic = rep(NA, 728), bic = rep(NA, 728))
 k = 1
 
-#check robustness of GAM models e.g., number of knots
+#check robustness of GAM models e.g., evaluate number of knots
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  for (j in 15:45) {
+  for (j in 15:45) {#explored number of knots
     Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = j),
                         family = poisson,
                         method = "REML",
@@ -43,7 +43,7 @@ for (i in names(X)) {
   }
 }
   
-#plot number of knots and AIC values
+#plot number of knots and AIC/BIC scores
 A <-
   bind_rows(ModelCheck %>% dplyr::mutate(score = as.numeric(aic), cat = "AIC") %>% dplyr::select(everything(), -bic, -aic),
             ModelCheck %>% dplyr::mutate(score = as.numeric(bic), cat = "BIC") %>% dplyr::select(everything(), -aic, -bic)) %>%
@@ -55,7 +55,7 @@ A <-
   ggplot() +
   geom_line(aes(x = nknots, y = score, color = country, group = country), size = 1.5) +
   scale_x_continuous(breaks = seq(15, 45, 3)) +
-  theme_bw(base_size = 14, base_family = "Amrican Typewriter") + 
+  theme_bw(base_size = 14, base_family = "Lato") + 
   facet_grid(hemix ~ cat, scales = "free_y") +
   geom_vline(xintercept = 35, linetype = "dotted", size = 1) +
   labs(title = "", x = "Number of knots", y = "Information Criterion score") +
