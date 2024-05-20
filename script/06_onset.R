@@ -31,16 +31,13 @@ deriv1 <- list()
 deriv2 <- list()
 onset2 <- list()
 
-# estTimes <- list()
-# estCases <- list()
-
 #functions to numerically calculate the second derivative
 deriv <- function(x, y) diff(y) / diff(x) 
 middle_pts <- function(x) x[-1] - diff(x) / 2 
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = 25),
+  Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = 35),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
@@ -48,6 +45,9 @@ for (i in names(X)) {
 }
 
 # #equal time interval estimation
+# estTimes <- list()
+# estCases <- list()
+
 # eps = 0.5
 # for (i in names(X)) {
 #   estTimes[[i]] = data.frame(time=seq(min(X[[i]]$time) - 0.5, max(X[[i]]$time) + 0.5 - eps, by=eps))

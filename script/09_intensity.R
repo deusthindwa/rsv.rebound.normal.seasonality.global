@@ -31,7 +31,7 @@ intense2 <- list()
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 25),
+  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 35),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
