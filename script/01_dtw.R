@@ -3,6 +3,8 @@
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
 #====================================================================
+#load dataset
+#====================================================================
 
 #split the dataset by country to form list of datasets
 X <-
@@ -10,7 +12,7 @@ X <-
 
     #set southern hemisphere countries to start from 1st week of 2020 to 52th week of 2022
       rsv_dtw %>%
-      dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "Japan", "Paraguay", "Peru", "South Africa") & #Colombia, India
+      dplyr::filter(country %in% c("Argentina", "Australia", "Costa Rica", "Japan", "Paraguay", "Peru", "South Africa") & #Colombia, India exclude from dtw analysis due to their unusual dynamics
                       date >= date("2017-01-08") & 
                       date <= date("2022-12-31")), #"2022-10-07"
 
@@ -59,13 +61,13 @@ Dshc <- Dshc %>% spread(country, fitcases) %>% dplyr::select(everything(), -seqw
 Dshc <- as.list(Dshc)
 
 #====================================================================
-#DYNAMIC TIME WARPING (DTW)
+#evaluate clusters and window size to choose from
 #====================================================================
 
 #DTW cluster evaluation to determine window size
 cfg <- dtwclust::compare_clusterings_configs(
   types = "hierarchical", 
-  k = 2L:4L, 
+  k = 2L:25L, 
   controls = list(hierarchical = hierarchical_control(method = "average")), 
   distances = pdc_configs("distance", hierarchical = list(dtw = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
   centroids = pdc_configs("centroid", hierarchical = list(dba = list(window.size = seq(from = 1L, to = 100L, by = 1L), norm = c("L1")))),
@@ -90,41 +92,41 @@ hc_wsize <-
                                          "k")])) %>%
     dplyr::rename("value" = "DBstar") %>%
     dplyr::mutate(cvix = "Modified Davies-Bouldin") %>%
-  tidyr::pivot_wider(names_from = k, values_from = value) %>%
-  dplyr::rename("k2" = `2`, "k3" = `3`, "k4" = `4`) %>%
-  dplyr::mutate(Min_k2 = min(k2),
-                OptWs_k2 = window.size_distance[which.min(k2)],
-                Min_k3 = min(k3),
-                OptWs_k3 = window.size_distance[which.min(k3)],
-                Min_k4 = min(k4),
-                OptWs_k4 = window.size_distance[which.min(k4)])
-  
+  dplyr::mutate(OptWs = window.size_distance[which.min(value)], Min_k = min(value))
+
 #plot varying window sizes and minimum distance to centroid by cluster validation index
-color <- c("k2" = "red", "k3" = "blue",  "k4" = "green")
 A <-
   hc_wsize %>%
   ggplot() +
-  geom_line(aes(x = window.size_distance, y = k2, color = "k2"), size = 1) +
-  geom_point(aes(x = OptWs_k2, y = Min_k2, color = "k2"), shape = 4, stroke = 2) +
-  geom_line(aes(x = window.size_distance, y = k3, color = "k3"), size = 1) +
-  geom_point(aes(x = OptWs_k3, y = Min_k3, color = "k3"), shape = 4, stroke = 2) +
-  geom_line(aes(x = window.size_distance, y = k4, color = "k4"), size = 1) +
-  geom_point(aes(x = OptWs_k4, y = Min_k4, color = "k4"), shape = 4, stroke = 2) +
+  geom_line(aes(x = window.size_distance, y = value, color = factor(k)), size = 1) +
+  geom_point(aes(x = OptWs, y = Min_k), shape = 4, stroke = 1, color = "black") +
+  geom_vline(aes(xintercept = OptWs), linetype = "dashed") +
+  geom_hline(aes(yintercept = Min_k), linetype = "dashed") +
+  scale_x_continuous(limit = c(1, 100), breaks = c(seq(1, 100, 9))) + 
+  scale_y_continuous(limit = c(0, 6.5), breaks = seq(0, 6.4, 1)) + 
   theme_bw(base_size = 16, base_family = 'Lato') +
-  theme(legend.position = "bottom") + 
-  guides(color = guide_legend(title = "Cluster size, k")) +
+  theme(legend.position = "right") + 
+  guides(color = guide_legend(title = "Number of clusters")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
-  labs(x = "Warping window size", y = "Distance to computed centroid", title = "")
+  labs(x = "Warping window size (weeks)", y = "Distance to computed centroid", title = "")
+
+ggsave(here("output", "sfig7_dtwWsOpt.png"), 
+       plot = A,
+       width = 12, height = 7, unit="in", dpi = 300)
+
+#====================================================================
+#use base scenario dtw
+#====================================================================
 
 #hierarchical clustering with dynamic time-warping (DTW)
 dtw_hc <- dtwclust::tsclust(Dshc,
                             type = "hierarchical",
-                            k = 4L,
+                            k = 3L,
                             preproc = zscore,
                             distance = "dtw_basic",
                             control = hierarchical_control(method = "average"),
                             trace = TRUE,
-                            args = tsclust_args(dist = list(window.size = 74L), cent = dba)
+                            args = tsclust_args(dist = list(window.size = 60L), cent = dba)
 )
 
 #extract data on clusters and their prototypes
@@ -133,7 +135,7 @@ hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus
 
 #plot ggdendrogram to show hierarchical clustering
 labs <- label(dendro_data(as.dendrogram(dtw_hc)))
-labs$Cluster <- c(rep("4", 3), rep("2", 3), rep("1", 7), rep("3", 13))
+labs$Cluster <- c(rep("3", 3), rep("2", 3), rep("1", 20))
 
 B <-
   ggdendro::ggdendrogram(dtw_hc) +
@@ -159,8 +161,7 @@ dtwclustDS <-
 
   mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
                            if_else(Cluster == 2, "Cluster 2",
-                                   if_else(Cluster == 3, "Cluster 3",
-                                           if_else(Cluster == 4, "Cluster 4", NA_character_)))))
+                                   if_else(Cluster == 3, "Cluster 3", NA_character_))))
 
 C <-
   dtwclustDS %>%
@@ -189,13 +190,12 @@ D <-
   labs(x = "Weeks since RSV epidemics in 2017", y = "z-normalised", title = "")
 
 
-ggsave(here("output", "fig4_dtwClustering.png"),
+ggsave(here("output", "fig3_dtwClust.png"),
        plot = ((B / (C/D))),
        width = 18, height = 16, unit = "in", dpi = 300)
 
-
 #====================================================================
-#====================================================================
+#use alternative scenarios dtw (sensitivity analysis)
 #====================================================================
 
 #Sensitivity analysis
@@ -274,11 +274,11 @@ S3 <-
 #hierarchical clustering with dynamic time-warping (DTW)
 dtw_hc <- dtwclust::tsclust(Dshc,
                             type = "hierarchical",
-                            k = 3L,
+                            k = 4L,
                             preproc = zscore,
                             distance = "dtw_basic",
                             control = hierarchical_control(method = "average"),
-                            args = tsclust_args(dist = list(window.size = 60L), cent = dba)
+                            args = tsclust_args(dist = list(window.size = 74L), cent = dba)
 )
 
 #extract data on clusters and their prototypes
@@ -287,7 +287,7 @@ hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus
 
 #plot ggdendrogram to show hierarchical clustering
 labs <- label(dendro_data(as.dendrogram(dtw_hc)))
-labs$Cluster <- c(rep("3", 3), rep("2", 3), rep("1", 20))
+labs$Cluster <- c(rep("4", 3), rep("2", 3), rep("1", 7), rep("3", 13))
 
 S4 <-
   ggdendro::ggdendrogram(dtw_hc) +
@@ -313,7 +313,8 @@ dtwclustDS3 <-
   
   mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
                            if_else(Cluster == 2, "Cluster 2", 
-                                   if_else(Cluster == 3, "Cluster 3", NA_character_))))
+                                   if_else(Cluster == 3, "Cluster 3", 
+                                           if_else(Cluster == 4, "Cluster 4", NA_character_)))))
   
 S5 <-
   dtwclustDS3 %>%
@@ -342,11 +343,128 @@ S6 <-
   labs(x = "Weeks since RSV epidemics in 2017", y = "z-normalised", title = "")
 
 
-ggsave(here("output", "sfig8_dtwwscs.png"), 
-       plot = A,
-       width = 12, height = 7, unit="in", dpi = 300)
-
-ggsave(here("output", "sfig9_dtwClustering.png"), 
+ggsave(here("output", "sfig8_dtwClustWs.png"), 
        plot = (S1/S2/S3) | (S4/S5/S6),
        width = 25, height = 17, unit="in", dpi = 300)
 
+#====================================================================
+#use entire warping window
+#====================================================================
+
+#DTW cluster evaluation to determine window size
+cfg <- dtwclust::compare_clusterings_configs(
+  types = "hierarchical", 
+  k = 2L:25L, 
+  controls = list(hierarchical = hierarchical_control(method = "average")), 
+  distances = pdc_configs("distance", hierarchical = list(dtw = list(norm = c("L1")))),
+  centroids = pdc_configs("centroid", hierarchical = list(dba = list(norm = c("L1")))),
+  preprocs = pdc_configs("preproc", hierarchical = list(zscore = list(norm = c("L1")))),
+  no.expand = c("norm" ))
+
+evaluators <- cvi_evaluators(c("DBstar"))
+comparison <- compare_clusterings(Dshc, 
+                                  types = "hierarchical", 
+                                  configs = cfg, 
+                                  seed = 8L, 
+                                  score.clus = evaluators$score, 
+                                  pick.clus = evaluators$pick)
+
+#dataset for varying window size
+hc_wsize <- 
+  #bind_rows(
+  as.data.frame(
+    (comparison$results$hierarchical[, c("distance", 
+                                         "DBstar",
+                                         "k")])) %>%
+  dplyr::rename("value" = "DBstar") %>%
+  dplyr::mutate(cvix = "Modified Davies-Bouldin")
+
+#plot varying window sizes and minimum distance to centroid by cluster validation index
+A <-
+  hc_wsize %>%
+  ggplot() +
+  geom_line(aes(x = k, y = value), size = 1) +
+  geom_point(aes(x = k, y = value, color = "red"), size = 1.5, shape = 4, stroke = 2) +
+  theme_bw(base_size = 16, base_family = 'Lato') +
+  theme(legend.position = "bottom") + 
+  scale_x_continuous(breaks = seq(1, 25, 2), limits = c(1, 25)) +
+  scale_y_continuous(breaks = seq(0.75, 4.25, 0.5), limits = c(0.75, 4.25)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  labs(title = "(C)", x = "Number of clusters", y = "Distance to computed centroid (cluster variation index - CVI)") +
+  theme(legend.position = "none")
+
+#hierarchical clustering with dynamic time-warping (DTW)
+dtw_hc <- dtwclust::tsclust(Dshc,
+                            type = "hierarchical",
+                            k = 3L,
+                            preproc = zscore,
+                            distance = "dtw_basic",
+                            control = hierarchical_control(method = "average"),
+                            trace = TRUE,
+                            args = tsclust_args(cent = dba)
+)
+
+#extract data on clusters and their prototypes
+hc_members <- as.data.frame((ggplot_build(plot(dtw_hc, type = "series", clus = c(1L:4L)))[["data"]]))
+hc_centroid <- as.data.frame((ggplot_build(plot(dtw_hc, type = "centroids", clus = c(1L:4L), lty=1))[["data"]]))
+
+#plot ggdendrogram to show hierarchical clustering
+labs <- label(dendro_data(as.dendrogram(dtw_hc)))
+labs$Cluster <- c(rep("3", 2), rep("2", 2), rep("1", 22))
+
+B <-
+  ggdendro::ggdendrogram(dtw_hc) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  labs(title = "(A)", x = "Time series hierarchical clustering", y = "Height") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  geom_point(data = labs, aes(x = x, y = 0, colour = Cluster), size = 4) +
+  theme(legend.position = c(0.9,0.8))
+
+#plot prototypes
+dtwclustDS <-
+  dplyr::rows_append(
+    hc_members %>%
+      dplyr::mutate(cat = "Cluster members") %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL"),
+    
+    hc_centroid %>% 
+      dplyr::mutate(cat = "Prototypes", "group" = NA) %>%
+      dplyr::select(group, colour, x, y, PANEL, cat) %>%
+      dplyr::rename("Cluster" = "PANEL")) %>%
+  
+  mutate(Cluster = if_else(Cluster == 1, " Cluster 1",
+                           if_else(Cluster == 2, "Cluster 2",
+                                   if_else(Cluster == 3, "Cluster 3", NA_character_))))
+
+C <-
+  dtwclustDS %>%
+  dplyr::filter(cat == "Cluster members") %>%
+  ggplot() +
+  geom_line(aes(x = x, y = y, color = colour), size = 2) +
+  facet_grid(cat ~ Cluster) +
+  scale_colour_grey(start = 0.1, end = 0.8) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(axis.text.x = element_blank()) + 
+  theme(legend.position = "none", legend.title = element_blank()) + 
+  theme(strip.text.y = element_text(size = 18), strip.text.x = element_text(size = 18), strip.background = element_rect(fill="white")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  labs(x = "", y = "z-normalised", title = "(B)")
+
+D <-
+  dtwclustDS %>%
+  dplyr::filter(cat == "Prototypes") %>%
+  ggplot() +
+  geom_line(aes(x = x, y = y, color = Cluster), size = 2) +
+  facet_grid(cat ~ Cluster) +
+  theme_bw(base_size = 18, base_family = 'Lato') +
+  theme(legend.position = "none", legend.title = element_blank()) + 
+  theme(strip.text.y = element_text(size = 18), strip.text.x = element_text(size = 0), strip.background = element_rect(fill="white")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  labs(x = "Weeks since RSV epidemics in 2017", y = "z-normalised", title = "")
+
+
+ggsave(here("output", "sfig9_dtwClustWsno.png"),
+       plot = ((B / ((C/D) | A | plot_layout(ncol = 2, width = c(2,1))))),
+       width = 18, height = 16, unit = "in", dpi = 300)

@@ -37,7 +37,7 @@ middle_pts <- function(x) x[-1] - diff(x) / 2
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = 35),
+  Gmodels[[i]] <- gam(cases ~ s(x = time, bs = "ps", k = 25),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
@@ -78,10 +78,6 @@ for (i in names(X)){
   deriv2[[i]] = data.frame(sderiv = deriv(middle_pts(tsDS[[i]]$seqwk), deriv(tsDS[[i]]$seqwk, tsDS[[i]]$fitcases))) %>%
     mutate(seqwk = seq.int(from = X[[i]]$seqwk[1], by = 1, length.out = n()),
            date = seq.int(from = X[[i]]$date[1], by = 7, length.out = n())) #second derivative
-
-  #alternative formula for second derivative without using deriv or middle_pts functions
-  #deriv2[[i]] = data.frame(sderiv = diff(deriv1[[i]]$fderiv)/diff(deriv1[[i]]$seqwk)) %>% 
-  #mutate(seqwk = seq.int(from = 1, by = 1, length.out = n())) #second derivative
   }
 
 #unlist all the datasets and keep location of maximim second derivative
@@ -149,12 +145,12 @@ O0 <-
   theme_bw(base_size = 14, base_family = 'Lato') +
   geom_vline(xintercept = c(52, 104, 156, 208, 260, 312), color = "blue", linetype = "dotted", cex = 0.6, alpha = 0.8) + 
   scale_x_continuous(breaks = seq(1, 325, 52), limits = c(0, 325)) +
-  labs(x = "Reporting weeks between 2017 and 2023", y = "GAM fitted RSV cases and estimated outbreak onset", title ="RSV ONSET TIMING") +
+  labs(x = "Reporting weeks between 2017 and 2023", y = "GAM fitted RSV cases and estimated outbreak onset", title ="") +
   theme(legend.position = "bottom", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
   
 
-ggsave(here("output", "sfig2_onset.png"),
+ggsave(here("output", "sfig1_onset.png"),
        plot = O0,
        width = 20, height = 22, unit="in", dpi = 300)
 
@@ -175,24 +171,20 @@ onset2 <-
                                if_else(!country %in% c("Australia", "Brazil", "Colombia", "France", "Iceland", "South Africa", "Netherlands") & year == "2022", "wave2", wave)))
 
 onset2x <- onset2 #onset2x dataset used for regression
+conv <- 2*pi/52 #convert to radians over 52 weeks
 
 #calculate circular mean for pre-Covid period (2017, 2018, 2019)
 onset2 <-
 onset2 %>%
   dplyr::select(country, wave, loc) %>%
   dplyr::group_by(country, wave) %>%
-  #dplyr::mutate(loc = (circular::mean.circular((2*pi/52)*(loc-1))/(2*pi/52) + 52) %% 52) %>% #52 weeks per year (circular)
+  dplyr::mutate(loc = loc*conv) %>% #52 weeks per year (circular)
   dplyr::mutate(row = row_number()) %>%
   tidyr::pivot_wider(names_from = wave, values_from = loc) %>%
   dplyr::select(everything(), -row) %>%
   dplyr::filter(!is.na(wave1), !is.na(wave2)) %>%
   data_frame() %>%
-  ungroup() %>%
-  
-  dplyr::mutate(precov = circular(precov, units = "degrees", template = "geographics", modulo = "pi"),
-                wave1 =  circular(wave1, units = "degrees", template = "geographics", modulo = "pi"),
-                wave2 = circular(wave2, units = "degrees", template = "geographics", modulo = "pi"),
-                wave3 = circular(wave3, units = "degrees", template = "geographics", modulo = "pi"))
+  ungroup()
 
 #bootstraping dataset
 onsetb <- 
@@ -215,7 +207,8 @@ onset_overall <-
                 w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
                 cat = "Overall") %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 #2)onset timing by hemisphere (circular correlation coefficient)
 onset_hemi <-
@@ -243,7 +236,8 @@ onset_hemi <-
   dplyr::rename("cat" = "id") %>%
   dplyr::select(-hemi) %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 O1 <-
   dplyr::bind_rows(onset_overall, onset_hemi) %>%
@@ -293,8 +287,8 @@ O3 <-
   theme(strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
-ggsave(here("output", "fig3_corHemisphere.png"),
-       plot = ((O1 + labs(title = "RSV ONSET TIMING"))/O2/(O3 + labs(x = "PreCOVID (2017-19) mean onset timing"))),
+ggsave(here("output", "fig4_onset.png"),
+       plot = ((O1 + labs(title = ""))/O2/(O3 + labs(x = "PreCOVID (2017-19) mean onset timing"))),
        width = 16, height = 14, unit = "in", dpi = 300)
 
 #====================================================================
@@ -322,13 +316,15 @@ for (j in c("Tropical", "Temperate")) {
                   w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
                   w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2))
 }
+
 onset_clim <- 
   bind_rows(scatterXY, .id = "id") %>%
   dplyr::rename("cat" = "id") %>%
   dplyr::select(-clim) %>%
   dplyr::mutate(cat = ifelse(cat == "Tropical", "(Sub)tropical", cat)) %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 O4 <-
   onset_clim %>%
@@ -378,7 +374,6 @@ O6 <-
   theme(strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
-#====================================================================
 #====================================================================
 
 #delete unnecessary files

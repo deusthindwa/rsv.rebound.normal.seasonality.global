@@ -10,7 +10,7 @@
 climate <-
   climate %>%
   dplyr::left_join(
-    onset2 %>%
+    onset2 %>% dplyr::mutate(precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi)) %>%
       dplyr::mutate(outSeasW1 = ifelse(abs(precov-wave1) >8.69, "yes", "no")) %>% #more than 2 months out of season in 2021 = yes
       dplyr::select(country, outSeasW1)) 
 
@@ -375,16 +375,16 @@ X8 <- dplyr::bind_rows(X) %>% dplyr::mutate(ds = "Second wave intensity") %>% dp
 for (i in c("hemi2", "scale(strin_indxL)", "scale(pop_dens)", "outSeasW1x", "scale(intenseW1)")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + hemi2", "scale(strin_indxL) + scale(pop_dens)", "scale(strin_indxL) + outSeasW1x", "scale(strin_indxL) + scale(intenseW1)")) {
+for (i in c("hemi2 + scale(strin_indxL)", "hemi2 + scale(pop_dens)", "hemi2 + outSeasW1x", "hemi2 + scale(intenseW1)")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens)", "scale(strin_indxL) + scale(intenseW1) + outSeasW1x")) {
+for (i in c("hemi2 + scale(pop_dens) + scale(strin_indxL)", "hemi2 + scale(pop_dens) + outSeasW1x", "hemi2 + scale(pop_dens) + scale(intenseW1)")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + hemi2", "scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + outSeasW1x")) {
+for (i in c("hemi2 + scale(pop_dens) + scale(intenseW1) + scale(strin_indxL)", "hemi2 + scale(pop_dens) + scale(intenseW1) + outSeasW1x")) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
-for (i in c("scale(strin_indxL) + scale(intenseW1) + scale(pop_dens) + hemi2 + outSeasW1x" )) {
+for (i in c("hemi2 + scale(pop_dens) + scale(intenseW1) + scale(strin_indxL) + outSeasW1x" )) {
   print(AIC(coxph(as.formula(paste0("Surv(time, event) ~", i)), data = DSonset2, control = coxph.control(iter.max = 1000))))
 }
 Y2 = coxph(Surv(time, event) ~  hemi2 + scale(strin_indxL) + scale(pop_dens) + scale(intenseW1), 

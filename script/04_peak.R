@@ -30,7 +30,7 @@ tsDS <- list()
 
 #run the GAM models where high number of knots are automatically selected via cross validation
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 35),
+  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 25),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
@@ -109,6 +109,7 @@ peak1 <-
 #ggplot of RSV time series and peak values
 P0 <-
   ggplot() +
+  geom_point(data = peak1, aes(x = seqwk, y = cases), color = "gray", shape = 1, size = 2,  stroke = 2) + #onset times
   geom_line(data = peak1, aes(x = seqwk, y = fitcases), size = 1.5, color = "black") + # GAM fitted curve
   geom_point(data = peak2, aes(x = seqwk2, y = pks), color = "darkgreen", shape = 4, size = 2,  stroke = 3) + #onset times
   geom_vline(xintercept = 171, linetype = "dotted", color = "black", size = 1.5) +
@@ -116,11 +117,11 @@ P0 <-
   theme_bw(base_size = 14, base_family = 'Lato') +
   geom_vline(xintercept = c(52, 104, 156, 208, 260, 312), color = "darkgreen", linetype = "dotted", cex = 0.6, alpha = 0.8) + 
   scale_x_continuous(breaks = seq(1, 325, 52), limits = c(0, 325)) +
-  labs(x = "Reporting weeks between 2017 and 2023", y = "GAM fitted RSV cases and estimated outbreak peak", title ="RSV PEAK TIMING") +
+  labs(x = "Reporting weeks between 2017 and 2023", y = "GAM fitted RSV cases and estimated outbreak peak", title ="") +
   theme(legend.position = "bottom", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
-ggsave(here("output", "sfig3_peak.png"),
+ggsave(here("output", "sfig2_peak.png"),
        plot = P0,
        width = 20, height = 22, unit="in", dpi = 300)
 
@@ -135,25 +136,21 @@ peak2 <-
                                if_else(year == "2021", "wave1",
                                        if_else(year == "2022", "wave2", "wave3"))))
 
-peak2x <- peak2 #peak2x dataset used for regression
+peak2x <- peak2 #peak2x dataset used for regressions
+conv <- 2*pi/52 #convert to radians over 52 weeks
 
 #calculate circular mean for pre-Covid period (2017, 2018, 2019)
 peak2 <-
   peak2 %>%
   dplyr::select(country, wave, loc) %>%
   dplyr::group_by(country, wave) %>%
-  dplyr::mutate(loc = (circular::mean.circular((2*pi/52)*(loc-1))/(2*pi/52) + 52) %% 52) %>% #52 weeks per year (circular)
+  dplyr::mutate(loc = loc*conv) %>% #52 weeks per year (circular)
   dplyr::mutate(row = row_number()) %>%
   tidyr::pivot_wider(names_from = wave, values_from = loc) %>%
   dplyr::select(everything(), -row) %>%
   dplyr::filter(!is.na(wave1), !is.na(wave2)) %>%
   data_frame() %>%
-  ungroup() %>%
-  
-  dplyr::mutate(precov = circular(precov, units = "degrees", template = "geographics", modulo = "pi"),
-                wave1 =  circular(wave1, units = "degrees", template = "geographics", modulo = "pi"),
-                wave2 = circular(wave2, units = "degrees", template = "geographics", modulo = "pi"),
-                wave3 = circular(wave3, units = "degrees", template = "geographics", modulo = "pi"))
+  ungroup()
 
 #bootstraping dataset
 peakb <- 
@@ -176,7 +173,8 @@ peak_overall <-
                 w3U = round(boot.ci(boot(as.data.frame(peakb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
                 cat = "Overall") %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 #2)peak timing by hemisphere (circular correlation coefficient)
 peak_hemi <-
@@ -204,7 +202,8 @@ peak_hemi <-
   dplyr::rename("cat" = "id") %>%
   dplyr::select(-hemi) %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 P1 <-
   dplyr::bind_rows(peak_overall, peak_hemi) %>%
@@ -214,8 +213,8 @@ P1 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "First wave RSV peak timing", title = "PEAK TIMING") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -230,8 +229,8 @@ P2 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Second wave RSV peak timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -246,8 +245,8 @@ P3 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Overall", "Northern hemisphere", "Southern hemisphere"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV peak timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -285,7 +284,8 @@ peak_clim <-
   dplyr::select(-clim) %>%
   dplyr::mutate(cat = ifelse(cat == "Tropical", "(Sub)tropical", cat)) %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
-                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L))
+                w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
+                precov = precov*52/(2*pi), wave1 = wave1*52/(2*pi), wave2 = wave2*52/(2*pi), wave3 = wave3*52/(2*pi))
 
 P4 <-
   peak_clim %>%
@@ -295,8 +295,8 @@ P4 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w1corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w1L,",",w1U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "First wave RSV peak timing", title = "PEAK TIMING") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -311,8 +311,8 @@ P5 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w2corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w2L,",",w2U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Second wave RSV peak timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +
@@ -327,8 +327,8 @@ P6 <-
   geom_text(aes(x = 42, y = 4.5, label = paste0("c = ", w3corr)), color = "black", size = 6, fontface = "bold") +
   geom_text(aes(x = 42, y = 1, label = paste0("(", w3L,",",w3U,")")), color = "black", size = 6, fontface = "bold") +
   facet_grid(.~ factor(cat, levels = c("Temperate", "(Sub)tropical"))) +
-  scale_x_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
-  scale_y_continuous(breaks = seq(1, 52, 5), limits = c(0,52)) +
+  scale_x_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
+  scale_y_continuous(breaks = seq(1, 53, 5), limits = c(0,53)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV peak timing", title = "") +
   theme(legend.position = "none", legend.title = element_blank()) +

@@ -3,6 +3,7 @@
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
 #====================================================================
+#====================================================================
 
 #load a package "pacman" used for for installing and loading other packages
 if(!require(pacman)) install.packages("pacman")
@@ -20,25 +21,17 @@ addTaskCallback(function(...) {set.seed(12345); TRUE})
 #removeTaskCallback(1)
 
 #====================================================================
+#====================================================================
 
-#set directory for downloaded datasets
-#source("script/02_fileCache.R")
-
-#set archiving path for downloaded datasets
-#source("script/03_runIfExpired.R")
-
-#load RSV case time series datasets (from WHO)
-#source("script/04_loadCases.R")
-
-#alternative to reading the datasets from various sources above, load directly from "reproduce" folder
-#ensure that results will be reproducible since data not coming from updated sources
-rsv_all <- rio::import(here("data", "reproduce", "rsv_all.csv"))
-rsv_dtw <- rio::import(here("data", "reproduce", "rsv_dtw.csv"))
+#load directly from "reproduce" folder
+#this ensures that results will be reproducible since data area not coming from updated sources
+rsv_all <- rio::import(here("data", "reproduce", "rsv_all.csv")) %>% dplyr::mutate(hemi = if_else(country == "Colombia", "Southern hemisphere", hemi)) #Colombia reclassified as Southern Hemi
+rsv_dtw <- rio::import(here("data", "reproduce", "rsv_dtw.csv")) %>% dplyr::mutate(hemi = if_else(country == "Colombia", "Southern hemisphere", hemi)) #Colombia reclassified as Southern Hemi
 stringency <- rio::import(here("data", "reproduce", "stringency.csv"))
 climate <- rio::import(here("data", "reproduce", "climate.csv"))
 
 #plot RSV time series and weekly dynamics
-source("script/05_timeSeries.R")
+source("script/05_tsDynamics.R")
 
 #Compute RSV onset timing
 source("script/06_onset.R")
@@ -53,7 +46,7 @@ source("script/08_growth.R")
 source("script/09_intensity.R")
 
 #compute regression models
-source("script/10_regress.R")
+source("script/10_regressB.R")
 
 #time series dynamic time warping and classification
 source("script/11_dtw.R")

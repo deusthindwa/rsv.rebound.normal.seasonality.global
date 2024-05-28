@@ -31,7 +31,7 @@ intense2 <- list()
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 35),
+  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 25),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
@@ -121,11 +121,11 @@ I0 <-
   theme_bw(base_size = 14, base_family = 'Lato') +
   geom_vline(xintercept = c(52, 104, 156, 208, 260, 312), color = "yellow4", linetype = "dotted", cex = 0.6, alpha = 0.8) + 
   scale_x_continuous(breaks = seq(1, 325, 52), limits = c(0, 325)) +
-  labs(x = "Reporting weeks between 2017 and 2023", y = "Estimated intensity of RSV epidemic (Integral of the positive 1st derivative of log fitted spline)", title ="RSV INTENSITY") +
+  labs(x = "Reporting weeks between 2017 and 2023", y = "Estimated intensity of RSV epidemic (Integral of the positive 1st derivative of log fitted spline)", title ="") +
   theme(legend.position = "bottom", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
-ggsave(here("output", "sfig5_intensity.png"),
+ggsave(here("output", "sfig4_intensity.png"),
        plot = I0,
        width = 20, height = 22, unit="in", dpi = 300)
 
@@ -268,7 +268,7 @@ I1 <-
   scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "First wave RSV intensity", title = "INTENSITY") +
-  theme(legend.position = "none", legend.title = element_blank()) +
+  theme(legend.position = "right", legend.title = element_blank()) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 

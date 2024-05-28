@@ -31,7 +31,7 @@ growth2 <- list()
 
 #run the GAM models via random effects maximum likelihood (REML)
 for (i in names(X)) {
-  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 35),
+  Gmodels[[i]] <- gam(cases ~ s(x = seqwk, bs = "ps", k = 25),
                       family = poisson,
                       method = "REML",
                       control = list(maxit = 100000),
@@ -124,11 +124,11 @@ G0 <-
   theme_bw(base_size = 14, base_family = 'Lato') +
   geom_vline(xintercept = c(52, 104, 156, 208, 260, 312), color = "red", linetype = "dotted", cex = 0.6, alpha = 0.8) + 
   scale_x_continuous(breaks = seq(1, 325, 52), limits = c(0, 325)) +
-  labs(x = "Reporting weeks between 2017 and 2023", y = "Estimated growth rate of RSV epidemic (Max 1st derivative of log fitted spline)", title ="RSV GROWTH RATE") +
+  labs(x = "Reporting weeks between 2017 and 2023", y = "Estimated growth rate of RSV epidemic (Max 1st derivative of log fitted spline)", title ="") +
   theme(legend.position = "bottom", legend.title = element_blank(), strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
-ggsave(here("output", "sfig4_growth.png"),
+ggsave(here("output", "sfig3_growth.png"),
        plot = G0,
        width = 20, height = 22, unit="in", dpi = 300)
 
@@ -255,7 +255,7 @@ G3 <-
   scale_y_continuous(breaks = seq(0, 1.8, 0.2), limits = c(0, 2)) +
   theme_bw(base_size = 14, base_family = 'Lato') +
   labs(x = "", y = "Third wave RSV growth rate", title = "") +
-  theme(legend.position = "bottom", legend.title = element_blank()) +
+  theme(legend.position = "none", legend.title = element_blank()) +
   theme(strip.text.x = element_text(size = 16)) + 
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
@@ -286,7 +286,7 @@ for (i in c("Tropical", "Temperate")) {
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
         dplyr::add_row(country="Anonymous", precov=0.76,wave3=0.26) %>% #95%CI only computed with atleast 4 complete pairs (values from countries means)
-        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 3),
+        dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
                       w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
                       w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2)))
 }

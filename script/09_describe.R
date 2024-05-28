@@ -2,8 +2,20 @@
 #Date: 01/03/2023
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
+#====================================================================
+#plot all sensitivity corrrelation plots (onset/peak/growth/intensity)
+#====================================================================
+
+ggsave(here("output", "sfig10_allHemi.png"),
+       plot = ((P1/P2/P3 + labs(x = "PreCOVID (2017-19) mean peak timing")) | (G1/G2/G3 + labs(x = "PreCOVID (2017-19) mean growth rate"))) | ((I1/I2/I3 + labs(x = "PreCOVID (2017-19) mean intensity"))),
+       width = 34, height = 16, unit = "in", dpi = 300)
+
+ggsave(here("output", "sfig11_allClimate.png"),
+       plot = ((O4/O5/O6 + labs(x = "PreCOVID (2017-19) mean onset timing")) | (P4/P5/P6 + labs(x = "PreCOVID (2017-19) mean peak timing")) | (G4/G5/G6 + labs(x = "PreCOVID (2017-19) mean growth rate")) | (I4/I5/I6 + labs(x = "PreCOVID (2017-19) mean intensity"))),
+       width = 32, height = 16, unit = "in", dpi = 300)
+
 #================================================================
-# SMOOTHED STRINGENCY INDEX PLOT
+#plot smooth stringency index
 #================================================================
 
 A <-
@@ -23,21 +35,9 @@ A <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #combined plots and saving
-ggsave(here("output", "sfig7_stringency.png"),
+ggsave(here("output", "sfig6_stringency.png"),
        plot = (A),
        width = 20, height = 17, unit="in", dpi = 300)
-
-#====================================================================
-#PLOT ALL CORRELATIONN PLOTS (ONSET/PEAK/GROWTH/INTENSITY)
-#====================================================================
-
-ggsave(here("output", "sfig8_corAllHemi.png"),
-       plot = ((P1/P2/P3) | (G1/G2/G3)) | ((I1/I2/I3)),
-       width = 30, height = 16, unit = "in", dpi = 300)
-
-ggsave(here("output", "sfig9_corClimate.png"),
-       plot = ((O4/O5/O6) | (P4/P5/P6) | (G4/G5/G6) | (I4/I5/I6)),
-       width = 32, height = 16, unit = "in", dpi = 300)
 
 #====================================================================
 #generate the description dataset
@@ -132,7 +132,7 @@ rsv_desc %>%
             Q3pop = quantile(med_age, 0.75))
 
 #====================================================================
-# plot stringency overtime, population density and population age
+# plot stringency and population density
 #====================================================================
 
 D1 <-
@@ -191,40 +191,8 @@ rsv_desc %>%
   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   scale_fill_manual(values=c("#00BFC4", "#FFC133"))
 
-# D5 <-
-# rsv_desc %>%
-#   dplyr::left_join(
-#     stringency %>%
-#       dplyr::group_by(country) %>%
-#       dplyr::summarise(pop_age = mean(med_age)) %>%
-#       dplyr::ungroup()) %>%
-#   ggplot(aes(y = pop_age, fill = hemi)) + 
-#   geom_boxplot(color = "black", size = 1) +
-#   theme_bw(base_size = 14, base_family = "American typewriter") +
-#   labs(x = "", y = "Population median age (years)", title = "(E)") +
-#   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-#   theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
-#   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-#   scale_fill_manual(values=c("#36454F", "#7CAE00"))
-# 
-# D6 <-
-# rsv_desc %>%
-#   dplyr::left_join(
-#     stringency %>%
-#       dplyr::group_by(country) %>%
-#       dplyr::summarise(pop_age = mean(med_age)) %>%
-#       dplyr::ungroup()) %>%
-#   ggplot(aes(y = pop_age, fill = clim)) + 
-#   geom_boxplot(color = "black", size = 1) +
-#   theme_bw(base_size = 14, base_family = "American typewriter") +
-#   labs(x = "", y = "Population median age (years)", title = "(F)") +
-#   theme(plot.title = element_text(size = 20), axis.text.x = element_text(face = "bold", size = 0), axis.text.y = element_text(face = "bold", size = 12)) +
-#   theme(legend.text = element_text(size = 11), legend.title = element_blank()) + 
-#   theme(legend.position = "right", panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
-#   scale_fill_manual(values=c("#00BFC4", "#FFC133"))
-
 # combine all the plots
-ggsave(here("output", "sfig6_pred_distribution.png"),
+ggsave(here("output", "sfig5_predDdistr.png"),
        plot = (D1 | D3)/(D2 | D4),
        width = 16, height = 14, unit="in", dpi = 300)
 
@@ -237,8 +205,7 @@ OnsetIntens <-
   bind_cols(
     DSintense1 %>% rename("intens1" = "intensity") %>% select(country, intens1),
     DSintense2 %>% rename("intens2" = "intensity") %>% select(intens2),
-    intense2 %>% dplyr::select(wave3) %>% dplyr::rename("intens3" = "wave3")
-    )
+    intense2 %>% dplyr::select(wave3) %>% dplyr::rename("intens3" = "wave3"))
 
 #onset first and second wave
 OnsetIntens1 <- 
@@ -246,7 +213,7 @@ OnsetIntens1 <-
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "first wave") %>% 
   left_join(OnsetIntens) %>%
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+  mutate(hemix = if_else(country %in% c("Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
                          if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
@@ -255,7 +222,7 @@ OnsetIntens2 <-
   dplyr::filter(event == 1) %>% 
   dplyr::mutate(wave = "second wave") %>% 
   left_join(OnsetIntens) %>%
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+  mutate(hemix = if_else(country %in% c("Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
                          if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, fdate, intens1, intens2, intens3, hemix, wave)
 
@@ -266,7 +233,7 @@ OnsetIntens3 <-
   dplyr::filter(wave == "wave3") %>% 
   dplyr::mutate(wave = "third wave")) %>% 
 
-  mutate(hemix = if_else(country %in% c("Colombia", "Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
+  mutate(hemix = if_else(country %in% c("Costa Rica", "Japan", "Canada", "Denmark", "France", "Hungary", "Iceland", "Mexico", "Mongolia", "India"), "Northern Hemisphere",
                          if_else(country %in% c("Germany",  "Ireland",  "Netherlands", "Northern Ireland", "Oman", "Portugal", "Qatar", "Scotland", "Spain", "Sweden", "United States"), "Northern Hemisphere", "Southern Hemisphere"))) %>%
   dplyr::select(country, date, intens1, intens2, intens3, hemix, wave)
 
@@ -309,7 +276,7 @@ ggplot() +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) 
 
 #plot the onset-intensity relationship
-ggsave(here("output", "fig4_onset_intensity.png"),
+ggsave(here("output", "fig5_onsetIntens.png"),
        plot = (B),
        width = 18, height = 10, unit="in", dpi = 300)
 
@@ -322,6 +289,8 @@ A <-
     OnsetIntens4 %>% select(country, fdate, hemix, intens1) %>% dplyr::rename("intens" = "intens1") %>% dplyr::mutate(wave = "first wave"),
     OnsetIntens4 %>% select(country, fdatex, hemix, intens2) %>% dplyr::rename("intens" = "intens2", "fdate" = "fdatex")  %>% dplyr::mutate(wave = "second wave"),
     OnsetIntens4 %>% select(country, fdatexx, hemix, intens3) %>% dplyr::rename("intens" = "intens3",  "fdate" = "fdatexx")  %>% dplyr::mutate(wave = "third wave", fdate = date(fdate))) %>%
+  dplyr::group_by(hemix, wave) %>%
+  mutate(mintens = round(mean(intens, na.rm = TRUE), digits = 2)) %>%
 
   ggplot() +
   geom_point(aes(x = fdate, y = intens, color = country, size = intens), shape = 21, stroke = 2, alpha = 0.75,  stat = "identity") +
@@ -329,17 +298,17 @@ A <-
                limits = c((date(c("2020-06-01", "2023-01-01")))),
                date_labels = "%m-%Y") +
   #scale_x_date(date_labels = "%m-%Y") +
+  geom_hline(aes(yintercept = mintens), linetype = "dotted", size = 1.5) +
+  geom_text(aes(x = date(c("2022-06-01")), y = 8, label = paste0("mean intensity: ", mintens)), color = "black", size = 6) +
   facet_grid(hemix~wave, scales = "free_x") +
-  theme_bw(base_size = 14, base_family = "Amrican Typewriter") + 
+  theme_bw(base_size = 16) + 
   labs(title = "", x = "Epidemic onset date", y = "RSV Intensity") +
   theme(legend.text = element_text(size = 10), legend.position = "right", legend.title = element_text(size = 11)) +
   guides(size = "none", color = guide_legend(title = "Country")) +
   theme(strip.text.x = element_text(size = 16), strip.text.y = element_text(size = 16), strip.background = element_rect(fill = "gray80")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
-
 #plot the onset-intensity relationship
-ggsave(here("output", "sfig4_onset_intensity.png"),
+ggsave(here("output", "sfig12_onsetIntens.png"),
        plot = (A),
        width = 18, height = 9, unit="in", dpi = 300)
-
