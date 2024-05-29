@@ -178,7 +178,7 @@ onset2 <-
 onset2 %>%
   dplyr::select(country, wave, loc) %>%
   dplyr::group_by(country, wave) %>%
-  dplyr::mutate(loc = loc*conv) %>% #52 weeks per year (circular)
+  dplyr::mutate(locx = loc*conv) %>% #52 weeks per year (circular)
   dplyr::mutate(row = row_number()) %>%
   tidyr::pivot_wider(names_from = wave, values_from = loc) %>%
   dplyr::select(everything(), -row) %>%
