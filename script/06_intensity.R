@@ -204,23 +204,17 @@ intense2 <-
 
 #1)intensity by overall status (pearson correlation coefficient)
 intense_overall <-
-  left_join(
     intense2 %>%
-    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
-                  w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
-                  w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
-                  w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
-    
-    intense2 %>%
-    dplyr::select(country, precov, wave3) %>%
-    dplyr::filter(!is.na(wave3)) %>%
-    dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
-                  w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2))) %>%
-  
-  dplyr::mutate(cat = "Overall")
+    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w2corr = round((stats::cor(wave2, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w1L = round((stats::cor.test(wave1, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w1U = round((stats::cor.test(wave1, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  w2L = round((stats::cor.test(wave2, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w2U = round((stats::cor.test(wave2, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  w3corr = round((stats::cor(wave3, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w3L = round((stats::cor.test(wave3, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w3U = round((stats::cor.test(wave3, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  cat = "Overall")
 
 #2)intensity by hemisphere (pearson correlation coefficient)
 intense_hemi <-
@@ -244,7 +238,7 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
         dplyr::filter(hemi == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::add_row(country="Anonymous", precov=2.87,wave3=2.74) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::add_row(country="Anonymous", precov=2.44,wave3=2.63) %>% #95%CI only computed with atleast 4 complete pairs, hence mean for last pair
         dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
                       w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
                       w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2)))
@@ -330,7 +324,7 @@ for (i in c("Tropical", "Temperate")) {
         dplyr::filter(clim == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::add_row(country="Anonymous", precov=4.86,wave3=3.37) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::add_row(country="Anonymous", precov=4.86,wave3=3.36) %>% #95%CI only computed with atleast 4 complete pairs
         dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
                       w3p = round((stats::cor.test(wave3, precov, method = c("pearson"))$p.value[1]), digits = 2),
                       w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),

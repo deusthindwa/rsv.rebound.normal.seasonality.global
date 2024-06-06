@@ -160,23 +160,17 @@ growth2 <-
 
 #1)growth rate by overall status (pearson correlation coefficient)
 growth_overall <-
-  left_join(
   growth2 %>%
-    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, method = c("pearson")))[1], digits = 2),
-                  w2corr = round((stats::cor(wave2, precov, method = c("pearson")))[1], digits = 2),
-                  w1L = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w1U = round((stats::cor.test(wave1, precov, method = c("pearson"))$conf.int[2]), digits = 2),
-                  w2L = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w2U = round((stats::cor.test(wave2, precov, method = c("pearson"))$conf.int[2]), digits = 2)),
-  
-  growth2 %>%
-    dplyr::select(country, precov, wave3) %>%
-    dplyr::filter(!is.na(wave3)) %>%
-    dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
-                  w3L = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[1]), digits = 2),
-                  w3U = round((stats::cor.test(wave3, precov, method = c("pearson"))$conf.int[2]), digits = 2))) %>%
-  
-  dplyr::mutate(cat = "Overall")
+    dplyr::mutate(w1corr = round((stats::cor(wave1, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w2corr = round((stats::cor(wave2, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w1L = round((stats::cor.test(wave1, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w1U = round((stats::cor.test(wave1, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  w2L = round((stats::cor.test(wave2, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w2U = round((stats::cor.test(wave2, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  w3corr = round((stats::cor(wave3, precov, use = "pairwise.complete.obs", method = c("pearson")))[1], digits = 2),
+                  w3L = round((stats::cor.test(wave3, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[1]), digits = 2),
+                  w3U = round((stats::cor.test(wave3, precov, use = "pairwise.complete.obs", method = c("pearson"))$conf.int[2]), digits = 2),
+                  cat = "Overall")
 
 #2)growth rate by hemisphere (pearson correlation coefficient)
 growth_hemi <-
@@ -200,7 +194,7 @@ for (i in c("Northern hemisphere", "Southern hemisphere")) {
         dplyr::filter(hemi == i) %>%
         dplyr::select(country, precov, wave3) %>%
         dplyr::filter(!is.na(wave3)) %>%
-        dplyr::add_row(country="Anonymous", precov=0,wave3=0) %>% #95%CI only computed with atleast 4 complete pairs
+        dplyr::add_row(country="Anonymous", precov=0.217, wave3=0.239) %>% #95%CI only computed with atleast 4 complete pairs, hence mean of pairs included
         dplyr::mutate(w3corr = round((stats::cor(wave3, precov, method = c("pearson")))[1], digits = 2),
                       w3L = round((stats::cor.test(wave3, precov, method = c("pearson"), exact = TRUE)$conf.int[1]), digits = 2),
                       w3U = round((stats::cor.test(wave3, precov, method = c("pearson"), exact = TRUE)$conf.int[2]), digits = 2)))

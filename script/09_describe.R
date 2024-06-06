@@ -3,7 +3,7 @@
 #Title: Rebound to normal RSV dynamics post COVID-19 suppression
 
 #====================================================================
-#plot all sensitivity corrrelation plots (onset/peak/growth/intensity)
+#plot all sensitivity correlation plots (onset/peak/growth/intensity)
 #====================================================================
 
 ggsave(here("output", "sfig10_allHemi.png"),

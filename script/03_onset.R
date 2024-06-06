@@ -178,7 +178,7 @@ onset2 <-
 onset2 %>%
   dplyr::select(country, wave, loc) %>%
   dplyr::group_by(country, wave) %>%
-  dplyr::mutate(locx = loc*conv) %>% #52 weeks per year (circular)
+  dplyr::mutate(loc = loc*conv) %>% #52 weeks per year (circular)
   dplyr::mutate(row = row_number()) %>%
   tidyr::pivot_wider(names_from = wave, values_from = loc) %>%
   dplyr::select(everything(), -row) %>%
@@ -195,16 +195,15 @@ onsetb <-
 #1)onset timing by overall status (circular correlation coefficient)
 onset_overall <-
   onset2 %>%
-  dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
-                w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
-                w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
-
-                w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
+  dplyr::mutate(w1corr = round((circular::cor.circular(sin(precov), sin(wave1)))[1], digits = 2),
+                w2corr = round((circular::cor.circular(sin(precov), sin(wave2)))[1], digits = 2),
+                w3corr = round((circular::cor.circular(sin(precov), sin(wave3)))[1], digits = 2),
+                w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3) %>% dplyr::filter(!is.na(wave3))), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
                 cat = "Overall") %>%
   dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U), w3U = if_else(w3U>1,1.0,w3U),
                 w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L), w3L = if_else(w3L< -1,-1.0,w3L),
@@ -220,17 +219,18 @@ for (j in c("Northern hemisphere", "Southern hemisphere")) {
   scatterXY[[j]] =
     onset_hemi %>%
     dplyr::filter(hemi == j) %>%
-    dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
-                  w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
-                  w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
-                  
-                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2))
+    dplyr::mutate(w1corr = round((circular::cor.circular(sin(precov), sin(wave1)))[1], digits = 2),
+                  w2corr = round((circular::cor.circular(sin(precov), sin(wave2)))[1], digits = 2),
+                  w3corr = round((circular::cor.circular(sin(precov), sin(wave3)))[1], digits = 2),
+
+                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, hemi) %>% dplyr::filter(hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, hemi) %>% dplyr::filter(!is.na(wave3), hemi ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2))
 }
+
 onset_hemi <- 
   bind_rows(scatterXY, .id = "id") %>%
   dplyr::rename("cat" = "id") %>%
@@ -305,16 +305,16 @@ for (j in c("Tropical", "Temperate")) {
   scatterXY[[j]] =
     onset_clim %>%
     dplyr::filter(clim == j) %>%
-    dplyr::mutate(w1corr = round((circular::cor.circular(precov, wave1))[1], digits = 2),
-                  w2corr = round((circular::cor.circular(precov, wave2))[1], digits = 2),
-                  w3corr = round((circular::cor.circular(precov, wave3))[1], digits = 2),
+    dplyr::mutate(w1corr = round((circular::cor.circular(sin(precov), sin(wave1)))[1], digits = 2),
+                  w2corr = round((circular::cor.circular(sin(precov), sin(wave2)))[1], digits = 2),
+                  w3corr = round((circular::cor.circular(sin(precov), sin(wave3)))[1], digits = 2),
 
-                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2))
+                  w1L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w1U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave1, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                  w2L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w2U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave2, clim) %>% dplyr::filter(clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                  w3L = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                  w3U = round(boot.ci(boot(as.data.frame(onsetb %>% dplyr::select(precov, wave3, clim) %>% dplyr::filter(!is.na(wave3), clim ==j)), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2))
 }
 
 onset_clim <- 

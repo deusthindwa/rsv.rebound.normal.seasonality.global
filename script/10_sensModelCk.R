@@ -171,12 +171,12 @@ bind_rows(
     Y <-
       onset %>%
       dplyr::filter(phase == j) %>%
-      dplyr::mutate(w1corr = round((circular::cor.circular(k25, k45))[1], digits = 2),
-                    w2corr = round((circular::cor.circular(k35, k45))[1], digits = 2),
-                    w1L = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k25, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                    w1U = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k25, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2),
-                    w2L = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k35, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[2], digits = 2),
-                    w2U = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k35, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(i[d,1], i[d,2]), R=1000), type = "norm")$normal[3], digits = 2)) %>%
+      dplyr::mutate(w1corr = round((circular::cor.circular(sin(k25), sin(k45)))[1], digits = 2),
+                    w2corr = round((circular::cor.circular(sin(k35), sin(k45)))[1], digits = 2),
+                    w1L = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k25, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                    w1U = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k25, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2),
+                    w2L = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k35, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[2], digits = 2),
+                    w2U = round(boot.ci(boot(as.data.frame(onset %>% dplyr::select(k35, k45, phase)) %>% dplyr::filter(phase == j), function(i,d) circular::cor.circular(sin(i[d,1]), sin(i[d,2])), R=1000), type = "norm")$normal[3], digits = 2)) %>%
       
       dplyr::mutate(w1U = if_else(w1U>1,1.0,w1U), w2U = if_else(w2U>1,1.0,w2U),
                     w1L = if_else(w1L< -1,-1.0,w1L), w2L = if_else(w2L< -1,-1.0,w2L))
